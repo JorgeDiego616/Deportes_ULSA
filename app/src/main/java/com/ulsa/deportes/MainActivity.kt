@@ -1,5 +1,5 @@
 package com.ulsa.deportes
-import androidx.compose.runtime.saveable.rememberSaveable
+
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -9,16 +9,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.PreviewScreenSizes
 import androidx.compose.ui.unit.dp
+import com.ulsa.deportes.login.LoginScreen
 import com.ulsa.deportes.ui.theme.UlsaAppTheme
 
 class MainActivity : ComponentActivity() {
@@ -36,7 +36,10 @@ class MainActivity : ComponentActivity() {
 @PreviewScreenSizes
 @Composable
 fun UlsaAppApp() {
-    var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
+
+    var currentDestination by rememberSaveable {
+        mutableStateOf(AppDestinations.HOME)
+    }
 
     NavigationSuiteScaffold(
         navigationSuiteItems = {
@@ -44,7 +47,7 @@ fun UlsaAppApp() {
                 item(
                     icon = {
                         Icon(
-                            it.icon,
+                            imageVector = it.icon,
                             contentDescription = it.label
                         )
                     },
@@ -55,10 +58,16 @@ fun UlsaAppApp() {
             }
         }
     ) {
-        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            EquipoScreen(
+
+        Scaffold(
+            modifier = Modifier.fillMaxSize()
+        ) { innerPadding ->
+
+
+            LoginScreen(
                 modifier = Modifier.padding(innerPadding)
             )
+
         }
     }
 }
@@ -72,6 +81,7 @@ enum class AppDestinations(
     PROFILE("Profile", Icons.Default.AccountBox),
 }
 
+// (Opcional, puedes dejarlo o borrarlo)
 @Composable
 fun EquipoScreen(modifier: Modifier = Modifier) {
     Column(
