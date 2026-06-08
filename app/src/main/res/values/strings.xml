@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">UlsaApp</string>
+    <string name="login_image_desc">Imagen de inicio de sesión</string>
+    <string name="email_label">Correo electrónico</string>
+    <string name="password_label">Contraseña</string>
+    <string name="login_button">Iniciar sesión</string>
 </resources>

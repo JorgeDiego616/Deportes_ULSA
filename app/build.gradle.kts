@@ -42,6 +42,19 @@ android {
 }
 
 dependencies {
+
+    implementation("androidx.navigation:navigation-compose:2.8.5")
+
+    implementation("io.coil-kt:coil-compose:2.7.0")
+    // Retrofit
+    implementation("com.squareup.retrofit2:retrofit:2.11.0")
+
+    // Converter de Gson (para el GsonConverterFactory)
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
+
+    implementation("androidx.compose.material:material-icons-extended:<version>")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.5")
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
