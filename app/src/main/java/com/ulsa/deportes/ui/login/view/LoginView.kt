@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,14 +30,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.ulsa.deportes.R
 
 @Composable
-fun LoginView() {
+fun LoginView(onLoginSuccess: () -> Unit) {
     // Variables de estado
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -50,6 +53,16 @@ fun LoginView() {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        // Texto de Bienvenida
+        Text(
+            text = "¡Bienvenido!",
+            style = MaterialTheme.typography.headlineLarge,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
         // Imagen del logo
         Image(
             painter = painterResource(id = R.drawable.logo_ulsa),
@@ -59,7 +72,7 @@ fun LoginView() {
                 .clip(CircleShape)
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(32.dp))
 
         // Campo de correo electrónico
         OutlinedTextField(
@@ -92,11 +105,11 @@ fun LoginView() {
             modifier = Modifier.fillMaxWidth()
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
         // Botón de inicio de sesión
         Button(
-            onClick = { /* Lógica de autenticación */ },
+            onClick = { onLoginSuccess() },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text(stringResource(R.string.login_button))
