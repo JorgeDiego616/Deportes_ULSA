@@ -1,43 +1,76 @@
 package com.ulsa.deportes.ui.auth.model
 
 /**
- * Datos que viajan hacia y desde la API de autenticación
- * (Django REST + JWT · https://androidbasics-auth-api.onrender.com).
+ * Datos que viajan hacia y desde la API de autenticación (GraphQL vía el Gateway
+ * de Apollo Federation · servicio "seguridad" · http://10.0.2.2:4000/ en el emulador).
+ *
+ * A diferencia de una API REST, aquí NO hay un endpoint por acción: todo se manda
+ * como un único POST con un "sobre" GraphQL ([GraphQLRequest]), y el servidor
+ * siempre responde con el mismo "sobre" ([GraphQLResponse]).
  *
  * Solo contiene datos: ni lógica de red ni de UI. La lógica vive en los ViewModel
  * de `ui/auth/viewmodel/` y la persistencia en `ui/auth/data/SessionPreferences`.
  */
 
-/** Cuerpo del `POST /api/auth/login/`. */
-data class LoginRequest(
-    val username: String,
+// ---------------------------------------------------------------------------
+// Sobres genéricos de GraphQL (se reutilizan para login, logout, o cualquier
+// otra operación futura contra este backend).
+// ---------------------------------------------------------------------------
+
+/** Cuerpo de CUALQUIER petición GraphQL: la operación como texto + sus variables. */
+data class GraphQLRequest(
+    val query: String,
+    val variables: Map<String, Any?>
+)
+
+/** Respuesta de CUALQUIER petición GraphQL: o viene `data`, o vienen `errors`. */
+data class GraphQLResponse<T>(
+    val data: T?,
+    val errors: List<GraphQLError>?
+)
+
+/** Un error de GraphQL (ej. "Credenciales inválidas."). */
+data class GraphQLError(
+    val message: String
+)
+
+// ---------------------------------------------------------------------------
+// Específico de la operación "login"
+// ---------------------------------------------------------------------------
+
+/** Lo que pide la mutation `login(email, password)`. */
+data class LoginVariables(
+    val email: String,
     val password: String
 )
 
-/** Cuerpo del `POST /api/auth/logout/` (invalida el refresh token en el servidor). */
-data class LogoutRequest(
-    val refresh: String
+/** El campo `data.login` de la respuesta. */
+data class LoginData(
+    val login: LoginPayload
+)
+
+/** El `token` (JWT, 8h de vigencia) + los datos del usuario. */
+data class LoginPayload(
+    val token: String,
+    val usuario: UserDto
 )
 
 /**
- * Respuesta `200 OK` del login: un `access` token corto (60 min), un `refresh`
- * largo (7 días) y los datos del usuario.
- */
-data class LoginResponse(
-    val access: String,
-    val refresh: String,
-    val user: UserDto
-)
-
-/**
- * Datos del usuario devueltos por el login. Solo se mapean los campos que la app
- * usa hoy; el resto del JSON (`first_name`, `last_name`, `date_joined`) se ignora.
+ * Datos del usuario devueltos por el backend. El `id` de Mongo es un string
+ * (ej. "6aa618ad55df53d56a0b022f"), no un entero como en el backend anterior.
  */
 data class UserDto(
-    val id: Int,
-    val username: String,
-    val email: String
+    val id: String,
+    val matricula: String,
+    val nombre: String,
+    val email: String,
+    val rol: String,
+    val activo: Boolean
 )
+
+// ---------------------------------------------------------------------------
+// Estado observable de la pantalla de login (sin cambios respecto a antes)
+// ---------------------------------------------------------------------------
 
 /**
  * Estado observable de la pantalla de login. Mismo patrón que `OnboardingUiState`.

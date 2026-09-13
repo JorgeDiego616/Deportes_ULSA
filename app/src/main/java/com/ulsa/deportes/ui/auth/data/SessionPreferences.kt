@@ -23,7 +23,7 @@ class SessionPreferences(context: Context) {
     fun saveSession(access: String, refresh: String, user: UserDto) {
         appPreferences.putString(KEY_ACCESS, access)
         appPreferences.putString(KEY_REFRESH, refresh)
-        appPreferences.putString(KEY_USERNAME, user.username)
+        appPreferences.putString(KEY_USERNAME, user.email)
     }
 
     fun accessToken(): String? = appPreferences.getString(KEY_ACCESS)

@@ -16,7 +16,9 @@ import com.ulsa.deportes.ui.homeSection.homeHome.viewmodel.HomeHomeviewmodel
  */
 @Composable
 fun HomeHomeview(
-    homeViewModel: HomeHomeviewmodel = viewModel()
+    homeViewModel: HomeHomeviewmodel = viewModel(),
+    onNavigateToSharedPreferencesExample: () -> Unit = {},
+    onNavigateToJetPackComposeExample: () -> Unit = {},
 ) {
     Box(
         modifier = Modifier.fillMaxSize(),

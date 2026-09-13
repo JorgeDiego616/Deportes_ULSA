@@ -1,63 +1,57 @@
 package com.ulsa.deportes.ui.auth.network
 
-import com.ulsa.deportes.ui.auth.model.LoginRequest
-import com.ulsa.deportes.ui.auth.model.LoginResponse
-import com.ulsa.deportes.ui.auth.model.LogoutRequest
+import com.ulsa.deportes.ui.auth.model.GraphQLRequest
+import com.ulsa.deportes.ui.auth.model.GraphQLResponse
+import com.ulsa.deportes.ui.auth.model.LoginData
 import okhttp3.OkHttpClient
-import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
-import retrofit2.http.Header
 import retrofit2.http.POST
 import java.util.concurrent.TimeUnit
 
 /**
- * Endpoints de sesión de la API de autenticación.
+ * Endpoint único de la API de autenticación (GraphQL vía el Gateway de Apollo
+ * Federation, servicio "seguridad").
  *
- * Base URL: https://androidbasics-auth-api.onrender.com
+ * A diferencia de una API REST, GraphQL no tiene un endpoint por acción — hay
+ * UNA sola URL, y lo que cambia entre "login", "registrarUsuario", etc. es el
+ * contenido del [GraphQLRequest] que se manda (el campo `query`).
+ *
+ * Base URL: http://10.0.2.2:4000/  (el gateway, visto desde el EMULADOR de
+ * Android Studio — 10.0.2.2 apunta a "localhost" de la máquina host).
  *
  * Todas las funciones son `suspend` para llamarse desde corrutinas (mismo estilo
  * que GistService).
  */
 interface AuthService {
     /**
-     * `POST /api/auth/login/` — público, sin token.
+     * Envía cualquier query/mutation de GraphQL al gateway.
      *
-     * @return [LoginResponse] con `access`, `refresh` y `user` (HTTP 200).
-     * @throws retrofit2.HttpException 401 si las credenciales son incorrectas,
-     *   400 si falta un campo.
+     * @return [GraphQLResponse] con `data` (si salió bien) o `errors` (si no).
+     *   A diferencia de REST, GraphQL casi siempre responde HTTP 200 incluso
+     *   cuando la operación falla — el error viene DENTRO del body, en `errors`,
+     *   no como una excepción HTTP. Por eso [GraphQLResponse.errors] se revisa
+     *   a mano en el ViewModel, en vez de esperar un `HttpException`.
      */
-    @POST("api/auth/login/")
-    suspend fun login(@Body body: LoginRequest): LoginResponse
-
-    /**
-     * `POST /api/auth/logout/` — requiere `Authorization: Bearer <access>`.
-     * Mete el `refresh` en la blacklist del servidor. Responde 205 sin cuerpo.
-     *
-     * Se devuelve [Response] (en vez de `Unit`) para poder leer el código HTTP
-     * sin que Retrofit lance excepción en el 205.
-     */
-    @POST("api/auth/logout/")
-    suspend fun logout(
-        @Header("Authorization") bearer: String,
-        @Body body: LogoutRequest
-    ): Response<Unit>
+    @POST(".")
+    suspend fun graphql(@Body body: GraphQLRequest): GraphQLResponse<LoginData>
 }
 
 /**
- * Cliente Retrofit para [AuthService]. Mismo patrón que `RetrofitClient`, pero con
- * timeouts de 60 s: Render (free tier) duerme el servicio tras ~15 min sin tráfico
- * y la primera petición tras eso puede tardar 30–50 s (cold start).
+ * Cliente Retrofit para [AuthService]. Timeouts moderados (30 s): a diferencia
+ * del backend anterior en Render (con cold start de 30-50s), este backend corre
+ * localmente vía Docker/Node, así que responde casi de inmediato una vez que
+ * los servicios están arriba.
  */
 object AuthRetrofitClient {
 
-    private const val BASE_URL = "https://androidbasics-auth-api.onrender.com/"
+    private const val BASE_URL = "http://10.0.2.2:4000/"
 
     private val okHttpClient = OkHttpClient.Builder()
-        .connectTimeout(60, TimeUnit.SECONDS)
-        .readTimeout(60, TimeUnit.SECONDS)
-        .writeTimeout(60, TimeUnit.SECONDS)
+        .connectTimeout(30, TimeUnit.SECONDS)
+        .readTimeout(30, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
         .build()
 
     val authService: AuthService = Retrofit.Builder()

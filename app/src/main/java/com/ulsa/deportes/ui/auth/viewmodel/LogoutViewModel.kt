@@ -3,54 +3,38 @@ package com.ulsa.deportes.ui.auth.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import com.ulsa.deportes.ui.auth.data.SessionPreferences
-import com.ulsa.deportes.ui.auth.model.LogoutRequest
-import com.ulsa.deportes.ui.auth.network.AuthRetrofitClient
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.launch
-
-/**
- * Scope con vida de proceso para la petición "best-effort" de logout. No usamos
- * `viewModelScope` porque al cerrar sesión navegamos y destruimos este ViewModel:
- * eso cancelaría la llamada antes de que el servidor reciba el refresh.
- */
-private val logoutScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
 /**
  * ViewModel para cerrar sesión.
  *
- * Cerrar sesión son dos cosas independientes:
- * 1. Borrar los tokens del dispositivo → se hace SIEMPRE y de inmediato; es lo que
- *    controla la sesión local (con JWT el `access` sigue vivo hasta expirar).
- * 2. Llamar a `/api/auth/logout/` para quemar el `refresh` en el servidor → se hace
- *    en segundo plano, sin bloquear la navegación. Si falla (sin red, 400/401, o el
- *    servidor dormido tardando 60 s), da igual: la sesión local ya se cerró.
+ * El backend actual (GraphQL + JWT stateless) no expone ninguna mutation de
+ * logout — solo `login` y `registrarUsuario` (ver `schema.graphql` del servicio
+ * de seguridad). Por eso cerrar sesión es 100% del lado del cliente: se borra
+ * el token guardado en el dispositivo y punto.
+ *
+ * El JWT en sí sigue siendo técnicamente válido en el servidor hasta que expira
+ * por su cuenta (8h, ver `expiresIn: '8h'` en el resolver de login) — no hay
+ * forma de "revocarlo" antes sin agregar soporte de logout al backend (ver nota
+ * al final del archivo si en algún momento se necesita esa versión más segura).
  */
 class LogoutViewModel(application: Application) : AndroidViewModel(application) {
 
     private val session = SessionPreferences(application)
-    private val authService = AuthRetrofitClient.authService
 
     /**
-     * Cierra la sesión local al instante e invoca [onLoggedOut] (para navegar a
-     * "login"). La invalidación del refresh en el servidor queda corriendo aparte.
+     * Cierra la sesión local al instante e invoca [onLoggedOut] (para navegar
+     * a "login"). No hay llamada de red: no hay nada que avisarle al servidor.
      */
     fun logout(onLoggedOut: () -> Unit) {
-        val access = session.accessToken()
-        val refresh = session.refreshToken()
-
         session.clearSession()
         onLoggedOut()
-
-        if (!access.isNullOrBlank() && !refresh.isNullOrBlank()) {
-            logoutScope.launch {
-                try {
-                    authService.logout("Bearer $access", LogoutRequest(refresh))
-                } catch (_: Exception) {
-                    // Best-effort: la sesión local ya se cerró.
-                }
-            }
-        }
     }
 }
+
+/*
+ * Si en el futuro el equipo agrega una mutation `logout` real al backend
+ * (invalidando el token en Redis, por ejemplo), este ViewModel volvería a
+ * necesitar una llamada de red "best-effort" en segundo plano, igual al
+ * patrón que tenía antes con el backend de Django (logoutScope +
+ * viewModelScope aparte, para que la navegación no cancele la petición).
+ */

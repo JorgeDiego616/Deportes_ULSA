@@ -46,7 +46,7 @@ fun LoginScreenView(
     viewModel: LoginViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    var username by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
@@ -69,12 +69,12 @@ fun LoginScreenView(
         Spacer(modifier = Modifier.height(32.dp))
 
         OutlinedTextField(
-            value = username,
+            value = email,
             onValueChange = {
-                username = it
+                email = it
                 viewModel.clearError()
             },
-            label = { Text("Usuario") },
+            label = { Text("Correo") },
             singleLine = true,
             enabled = !uiState.isLoading,
             modifier = Modifier.fillMaxWidth()
@@ -127,7 +127,7 @@ fun LoginScreenView(
         Spacer(modifier = Modifier.height(32.dp))
 
         Button(
-            onClick = { viewModel.login(username, password) },
+            onClick = { viewModel.login(email, password) },
             enabled = !uiState.isLoading,
             modifier = Modifier.fillMaxWidth()
         ) {

@@ -20,6 +20,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -29,15 +30,17 @@ import com.ulsa.deportes.ui.homeSection.homeHome.view.HomeHomeview
 import com.ulsa.deportes.ui.teamsSection.teamsHome.view.teamsHomeView
 import com.ulsa.deportes.ui.matchesSection.matchesHome.view.matchesHomeView
 import com.ulsa.deportes.ui.profileSection.profileHome.view.profileHomeView
-import com.ulsa.deportes.ui.login.view.LoginView
+// import com.ulsa.deportes.ui.login.view.LoginView
 import com.ulsa.deportes.ui.newsSection.newsHome.view.NewsHomeView
+import com.ulsa.deportes.ui.auth.view.LoginScreenView
+import com.ulsa.deportes.ui.auth.viewmodel.LogoutViewModel
 
 /**
  * Sealed class defining all bottom-tab routes with their metadata.
  */
 //sealed class para los botones y que funcionen en la app
-sealed class AppRoute(val route: String, val label: String? = null, val icon: ImageVector? = null) {
-    object Login : AppRoute("login")
+sealed class AppRoute(val route: String, val label: String, val icon: ImageVector) {
+    object Login : AppRoute("login","Login", Icons.Filled.Person)
     object APIRequest : AppRoute("api_request", "API", Icons.Filled.Api)
     object TeamsSection : AppRoute("team_section", "Teams", Icons.Filled.SportsSoccer)
     object HomeHome : AppRoute("home_home", "Home", Icons.Filled.Home)
@@ -48,11 +51,11 @@ sealed class AppRoute(val route: String, val label: String? = null, val icon: Im
 
 /** Ordered list of all tabs shown in the bottom bar. */
 private val TABS = listOf(
-    AppRoute.TeamsSection,
-    AppRoute.HomeHome,
-    AppRoute.NewsSection,
-    AppRoute.MatchesSection,
-    AppRoute.ProfileSection,
+    AppRoute.TeamsSection, //ThirdPartialIDS2
+    AppRoute.HomeHome, //FirstPartialPDM1
+    AppRoute.NewsSection, //SecondPartialPDM1
+    AppRoute.MatchesSection, //ThirdPartialPDM1
+    AppRoute.ProfileSection, //PersonalInformation
 )
 
 @Composable
@@ -80,8 +83,8 @@ fun AppNavigation() {
                                     restoreState = true
                                 }
                             },
-                            icon = { Icon(tab.icon!!, contentDescription = tab.label) },
-                            label = { Text(tab.label!!, fontSize = 10.sp) }
+                            icon = { Icon(tab.icon, contentDescription = tab.label) },
+                            label = { Text(tab.label, fontSize = 10.sp) }
                         )
                     }
                 }
@@ -93,12 +96,32 @@ fun AppNavigation() {
             startDestination = AppRoute.Login.route,
             modifier = Modifier.padding(innerPadding)
         ) {
-            composable(AppRoute.Login.route) {
-                LoginView(onLoginSuccess = {
-                    navController.navigate(AppRoute.TeamsSection.route) {
-                        popUpTo(AppRoute.Login.route) { inclusive = true }
-                    }
-                })
+            // Aqui se pone lo del onboarding
+//            composable("onboarding") {
+//                OnboardingView(
+//                    onFinishOnboarding = {
+//                        rootNavController.navigate("login") {
+//                            popUpTo("onboarding") { inclusive = true }
+//                        }
+//                    }
+//                )
+//            }
+
+            composable("tabs") {
+                val logoutViewModel: LogoutViewModel = viewModel()
+                TabsScaffold(
+                    onLogout = {
+                        logoutViewModel.logout {
+                            navController.navigate("login") {
+                                popUpTo("tabs") { inclusive = true }
+                            }
+                        }
+                    },
+                    onNavigateToFirstApi = { navController.navigate("first_api_request") },
+                    onNavigateToSharedPreferencesExample = { navController.navigate("shared_preferences_example") },
+                    onNavigateToJetPackComposeExample = { navController.navigate("jetpack_compose_examples") },
+                    onNavigateTodetailColumn = { navController.navigate("detail_Column") }
+                )
             }
             
             composable(AppRoute.TeamsSection.route) {
@@ -113,6 +136,67 @@ fun AppNavigation() {
 
             composable("api_request") {
                 ApiRequestView(onBack = { navController.popBackStack() })
+            }
+        }
+    }
+}
+
+
+@Composable
+private fun TabsScaffold(
+    onLogout: () -> Unit,
+    onNavigateToFirstApi: () -> Unit, /* este se cambio al original del profe */
+    onNavigateToSharedPreferencesExample: () -> Unit,
+    onNavigateToJetPackComposeExample: () -> Unit,
+    onNavigateTodetailColumn: () -> Unit
+) {
+    val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    Scaffold(
+        bottomBar = {
+            NavigationBar {
+                TABS.forEach { tab ->
+                    NavigationBarItem(
+                        selected = currentRoute == tab.route,
+                        onClick = {
+                            navController.navigate(tab.route) {
+                                popUpTo(navController.graph.startDestinationId) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                        },
+                        icon = { Icon(tab.icon, contentDescription = tab.label) },
+                        label = { Text(tab.label, fontSize = 10.sp) }
+                    )
+                }
+            }
+        }
+    ) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = AppRoute.TeamsSection.route,
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            composable(AppRoute.TeamsSection.route) {
+                teamsHomeView(onNavigateToFirstApi = onNavigateToFirstApi)
+            }
+            composable(AppRoute.HomeHome.route) {
+                HomeHomeview(
+                    // aqui se hacen las rutas de los botones en la funcion de HomeHomeview o en el repo del profe es HomeFirstPartialPDM1View
+                    // Si llegamos a poner botones, la escrutura de abajo sirve para decir a donde dirige cada boton.
+//                    onNavigateToSharedPreferencesExample = onNavigateToSharedPreferencesExample,
+//                    onNavigateToJetPackComposeExample = onNavigateToJetPackComposeExample,
+//                    onNavigateTodetailColumn = onNavigateTodetailColumn
+                )
+            }
+            composable(AppRoute.NewsSection.route) { NewsHomeView() }
+            composable(AppRoute.MatchesSection.route) { matchesHomeView() }
+            composable(AppRoute.ProfileSection.route) {
+                profileHomeView(onLogout = onLogout)
             }
         }
     }
