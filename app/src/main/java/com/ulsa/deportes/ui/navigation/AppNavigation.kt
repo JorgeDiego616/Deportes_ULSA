@@ -1,5 +1,6 @@
 package com.ulsa.deportes.ui.navigation
 
+import android.app.Application
 import com.ulsa.deportes.ui.teamsSection.APIRequest.view.ApiRequestView
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -9,6 +10,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.SportsSoccer
 import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Newspaper
+import androidx.compose.material.icons.filled.Start
 
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -17,14 +19,17 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.ulsa.deportes.common.preferences.AppPreferences
 
 import com.ulsa.deportes.ui.homeSection.homeHome.view.HomeHomeview
 import com.ulsa.deportes.ui.teamsSection.teamsHome.view.teamsHomeView
@@ -33,11 +38,15 @@ import com.ulsa.deportes.ui.profileSection.profileHome.view.profileHomeView
 import com.ulsa.deportes.ui.newsSection.newsHome.view.NewsHomeView
 import com.ulsa.deportes.ui.auth.view.LoginScreenView
 import com.ulsa.deportes.ui.auth.viewmodel.LogoutViewModel
+import com.ulsa.deportes.ui.onboarding.data.OnboardingPreferences
+import com.ulsa.deportes.ui.onboarding.view.OnboardingScreenView
+import com.ulsa.deportes.ui.onboarding.viewmodel.OnboardingViewModel
 
 /**
  * Sealed class defining all bottom-tab routes with their metadata.
  */
 sealed class AppRoute(val route: String, val label: String, val icon: ImageVector) {
+    object Onboarding : AppRoute("onboarding", "Onboarding", Icons.Filled.Start)
     object Login : AppRoute("login", "Login", Icons.Filled.Person)
     object APIRequest : AppRoute("api_request", "API", Icons.Filled.Api)
     object TeamsSection : AppRoute("team_section", "Teams", Icons.Filled.SportsSoccer)
@@ -48,9 +57,6 @@ sealed class AppRoute(val route: String, val label: String, val icon: ImageVecto
 }
 
 /** Ordered list of all tabs shown in the bottom bar. */
-// CAMBIO: este comentario cambió — ahora aclara que TABS solo lo usa
-// TabsScaffold. Antes se usaba TAMBIÉN en el NavigationBar de AppNavigation(),
-// que ya no existe (ver más abajo).
 private val TABS = listOf(
     AppRoute.TeamsSection,
     AppRoute.HomeHome,
@@ -60,49 +66,43 @@ private val TABS = listOf(
 )
 
 /**
- * Grafo de navegación de nivel raíz. Solo decide entre Login o el conjunto de
- * tabs (TabsScaffold) — YA NO tiene su propio Scaffold/NavigationBar, para
- * evitar la duplicación de barras que causaba que el logout no funcionara.
+ * Grafo de navegación de nivel raíz.
  */
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+    val context = LocalContext.current
+    val application = context.applicationContext as Application
+    
+    // Logic to decide start destination based on onboarding status
+    val startDestination = remember {
+        val appPrefs = AppPreferences(context)
+        val onboardingPrefs = OnboardingPreferences(appPrefs)
+        if (onboardingPrefs.isOnboardingCompleted()) {
+            AppRoute.Login.route
+        } else {
+            AppRoute.Onboarding.route
+        }
+    }
 
-    // ELIMINADO: ya no se leen navBackStackEntry / currentRoute / showBottomBar
-    // aquí. Eran solo para decidir si mostrar la barra de navegación EXTERNA,
-    // que también se eliminó (ver más abajo). TabsScaffold ya maneja su propia
-    // barra internamente con su propio currentRoute.
-    //
-    // val navBackStackEntry by navController.currentBackStackEntryAsState()
-    // val currentRoute = navBackStackEntry?.destination?.route
-    // val showBottomBar = currentRoute != AppRoute.Login.route
-
-    // ELIMINADO: todo el Scaffold + NavigationBar que estaba aquí. Este era
-    // el causante del bug: al tocar un tab en ESTA barra, se navegaba a rutas
-    // registradas en ESTE NavHost (ver abajo qué también se quitó de aquí),
-    // que llamaban a profileHomeView() SIN onLogout, dejando el botón de
-    // "Cerrar sesión" sin conectar a nada (usaba el valor default onLogout = {}).
-    //
-    // Scaffold(
-    //     bottomBar = {
-    //         if (showBottomBar) {
-    //             NavigationBar {
-    //                 TABS.forEach { tab -> ... }
-    //             }
-    //         }
-    //     }
-    // ) { innerPadding -> ... }
-
-    // CAMBIO: el NavHost ya no vive dentro de un Scaffold externo, y ya no
-    // recibe modifier = Modifier.padding(innerPadding) (ese padding solo tenía
-    // sentido para compensar la barra externa que ya no existe).
     NavHost(
         navController = navController,
-        startDestination = AppRoute.Login.route
+        startDestination = startDestination
     ) {
-        // NUEVO: antes este composable("login") NO EXISTÍA en el archivo — por
-        // eso crasheaba con "navigation destination login is not a direct
-        // child of this NavGraph" al arrancar. Aquí se agrega LoginScreenView.
+        composable(AppRoute.Onboarding.route) {
+            val onboardingViewModel: OnboardingViewModel = viewModel(
+                factory = OnboardingViewModel.Factory(application)
+            )
+            OnboardingScreenView(
+                viewModel = onboardingViewModel,
+                onFinished = {
+                    navController.navigate(AppRoute.Login.route) {
+                        popUpTo(AppRoute.Onboarding.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
         composable(AppRoute.Login.route) {
             LoginScreenView(
                 onLoginSuccess = {
@@ -118,10 +118,6 @@ fun AppNavigation() {
             TabsScaffold(
                 onLogout = {
                     logoutViewModel.logout {
-                        // CAMBIO: antes decía navController.navigate("login")
-                        // con el string suelto; ahora usa la constante
-                        // AppRoute.Login.route (mismo valor, más seguro ante
-                        // futuros cambios de nombre de ruta).
                         navController.navigate(AppRoute.Login.route) {
                             popUpTo("tabs") { inclusive = true }
                         }
@@ -134,20 +130,6 @@ fun AppNavigation() {
             )
         }
 
-        // ELIMINADO: estas 5 rutas vivían aquí, DUPLICANDO las que ya existen
-        // (correctamente, con onLogout conectado) dentro del NavHost interno
-        // de TabsScaffold. Eran alcanzables solo a través de la barra externa
-        // ya eliminada, y su versión de profileHomeView() (sin onLogout) era
-        // la causa exacta del bug de logout.
-        //
-        // composable(AppRoute.TeamsSection.route) {
-        //     teamsHomeView(onNavigateToFirstApi = { navController.navigate("api_request") })
-        // }
-        // composable(AppRoute.HomeHome.route) { HomeHomeview() }
-        // composable(AppRoute.NewsSection.route) { NewsHomeView() }
-        // composable(AppRoute.MatchesSection.route) { matchesHomeView() }
-        // composable(AppRoute.ProfileSection.route) { profileHomeView() }
-
         composable("api_request") {
             ApiRequestView(onBack = { navController.popBackStack() })
         }
@@ -158,13 +140,11 @@ fun AppNavigation() {
 @Composable
 private fun TabsScaffold(
     onLogout: () -> Unit,
-    onNavigateToFirstApi: () -> Unit, /* este se cambio al original del profe */
+    onNavigateToFirstApi: () -> Unit,
     onNavigateToSharedPreferencesExample: () -> Unit,
     onNavigateToJetPackComposeExample: () -> Unit,
     onNavigateTodetailColumn: () -> Unit
 ) {
-    // SIN CAMBIOS: esta función ya estaba bien armada — es la única fuente de
-    // verdad para la barra de tabs y sus rutas. El bug nunca estuvo aquí.
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
@@ -200,19 +180,11 @@ private fun TabsScaffold(
                 teamsHomeView(onNavigateToFirstApi = onNavigateToFirstApi)
             }
             composable(AppRoute.HomeHome.route) {
-                HomeHomeview(
-                    // aqui se hacen las rutas de los botones en la funcion de HomeHomeview o en el repo del profe es HomeFirstPartialPDM1View
-                    // Si llegamos a poner botones, la escrutura de abajo sirve para decir a donde dirige cada boton.
-//                    onNavigateToSharedPreferencesExample = onNavigateToSharedPreferencesExample,
-//                    onNavigateToJetPackComposeExample = onNavigateToJetPackComposeExample,
-//                    onNavigateTodetailColumn = onNavigateTodetailColumn
-                )
+                HomeHomeview()
             }
             composable(AppRoute.NewsSection.route) { NewsHomeView() }
             composable(AppRoute.MatchesSection.route) { matchesHomeView() }
             composable(AppRoute.ProfileSection.route) {
-                // CONFIRMADO SIN CAMBIOS: esta es la única versión correcta,
-                // la que sí conecta onLogout con el botón real.
                 profileHomeView(onLogout = onLogout)
             }
         }
