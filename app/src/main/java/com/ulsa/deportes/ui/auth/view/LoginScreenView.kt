@@ -1,44 +1,38 @@
 package com.ulsa.deportes.ui.auth.view
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ulsa.deportes.R
 import com.ulsa.deportes.ui.auth.viewmodel.LoginViewModel
 
+// Consistent Sporty Color Palette
+private val SportWhite = Color(0xFFFFFFFF)
+private val SportBlueStrong = Color(0xFF0D47A1)
+
 /**
- * Pantalla de inicio de sesión. Solo dibuja: el estado (carga, error, sesión
- * iniciada) y la lógica viven en [LoginViewModel].
- *
- * Cuando el login es correcto, [LoginViewModel] pone `isLoggedIn = true` y esta
- * vista dispara [onLoginSuccess] para que quien la use decida a dónde navegar.
+ * Pantalla de inicio de sesión rediseñada con fondo blanco y estética deportiva ULSA.
  */
 @Composable
 fun LoginScreenView(
@@ -54,101 +48,165 @@ fun LoginScreenView(
         if (uiState.isLoggedIn) onLoginSuccess()
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+            .background(SportWhite)
     ) {
-        Text(
-            text = "Iniciar sesión",
-            style = MaterialTheme.typography.headlineMedium
-        )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp)
+                .systemBarsPadding(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            // ULSA Logo
+            Image(
+                painter = painterResource(id = R.drawable.logo_ulsa),
+                contentDescription = "ULSA Logo",
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(RoundedCornerShape(16.dp)),
+                contentScale = ContentScale.Fit
+            )
 
-        Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-        OutlinedTextField(
-            value = email,
-            onValueChange = {
-                email = it
-                viewModel.clearError()
-            },
-            label = { Text("Correo") },
-            singleLine = true,
-            enabled = !uiState.isLoading,
-            modifier = Modifier.fillMaxWidth()
-        )
+            Text(
+                text = "BIENVENIDO",
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Black,
+                color = SportBlueStrong,
+                textAlign = TextAlign.Center
+            )
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Inicia sesión para continuar",
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Bold,
+                color = SportBlueStrong.copy(alpha = 0.8f),
+                textAlign = TextAlign.Center
+            )
 
-        OutlinedTextField(
-            value = password,
-            onValueChange = {
-                password = it
-                viewModel.clearError()
-            },
-            label = { Text("Contraseña") },
-            singleLine = true,
-            enabled = !uiState.isLoading,
-            visualTransformation = if (passwordVisible) {
-                VisualTransformation.None
-            } else {
-                PasswordVisualTransformation()
-            },
-            trailingIcon = {
-                IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Icon(
-                        imageVector = if (passwordVisible) {
-                            Icons.Filled.VisibilityOff
-                        } else {
-                            Icons.Filled.Visibility
-                        },
-                        contentDescription = if (passwordVisible) {
-                            "Ocultar contraseña"
-                        } else {
-                            "Mostrar contraseña"
-                        }
+            Spacer(modifier = Modifier.height(40.dp))
+
+            // Email Field
+            OutlinedTextField(
+                value = email,
+                onValueChange = {
+                    email = it
+                    viewModel.clearError()
+                },
+                label = { Text("Correo Electrónico", fontWeight = FontWeight.SemiBold) },
+                singleLine = true,
+                enabled = !uiState.isLoading,
+                modifier = Modifier.fillMaxWidth(),
+                leadingIcon = {
+                    Icon(Icons.Default.Email, contentDescription = null, tint = SportBlueStrong)
+                },
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = SportBlueStrong,
+                    unfocusedBorderColor = SportBlueStrong.copy(alpha = 0.5f),
+                    focusedLabelColor = SportBlueStrong,
+                    cursorColor = SportBlueStrong
+                )
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Password Field
+            OutlinedTextField(
+                value = password,
+                onValueChange = {
+                    password = it
+                    viewModel.clearError()
+                },
+                label = { Text("Contraseña", fontWeight = FontWeight.SemiBold) },
+                singleLine = true,
+                enabled = !uiState.isLoading,
+                visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                leadingIcon = {
+                    Icon(Icons.Default.Lock, contentDescription = null, tint = SportBlueStrong)
+                },
+                trailingIcon = {
+                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                        Icon(
+                            imageVector = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                            contentDescription = if (passwordVisible) "Ocultar" else "Mostrar",
+                            tint = SportBlueStrong
+                        )
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = SportBlueStrong,
+                    unfocusedBorderColor = SportBlueStrong.copy(alpha = 0.5f),
+                    focusedLabelColor = SportBlueStrong,
+                    cursorColor = SportBlueStrong
+                )
+            )
+
+            // Error Message
+            if (uiState.error != null) {
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    text = uiState.error!!,
+                    color = Color.Red,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(Color.LightGray.copy(alpha = 0.2f), RoundedCornerShape(8.dp))
+                        .padding(8.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Login Button
+            Button(
+                onClick = { viewModel.login(email, password) },
+                enabled = !uiState.isLoading,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = SportBlueStrong,
+                    contentColor = SportWhite
+                ),
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
+            ) {
+                if (uiState.isLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(24.dp),
+                        strokeWidth = 3.dp,
+                        color = SportWhite
+                    )
+                } else {
+                    Text(
+                        text = "ENTRAR",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.Black
                     )
                 }
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        if (uiState.error != null) {
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = uiState.error!!,
-                color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodyMedium
-            )
-        }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        Button(
-            onClick = { viewModel.login(email, password) },
-            enabled = !uiState.isLoading,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            if (uiState.isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(20.dp),
-                    strokeWidth = 2.dp,
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
-            } else {
-                Text("Entrar")
             }
-        }
 
-        if (uiState.isLoading) {
-            Spacer(modifier = Modifier.height(12.dp))
-            Text(
-                text = "Conectando… la primera vez puede tardar unos segundos.",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            // Loading message
+            if (uiState.isLoading) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = "Conectando al servidor deportivo...",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = SportBlueStrong,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
 }
