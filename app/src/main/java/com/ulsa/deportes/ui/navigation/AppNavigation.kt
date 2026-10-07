@@ -41,6 +41,10 @@ import com.ulsa.deportes.ui.auth.viewmodel.LogoutViewModel
 import com.ulsa.deportes.ui.onboarding.data.OnboardingPreferences
 import com.ulsa.deportes.ui.onboarding.view.OnboardingScreenView
 import com.ulsa.deportes.ui.onboarding.viewmodel.OnboardingViewModel
+import com.ulsa.deportes.ui.qrSection.qrHome.view.QrScreenView
+
+/** Ruta interna (no es tab) para la pantalla de creación de QR. */
+private const val QR_ROUTE = "qr_screen"
 
 /**
  * Sealed class defining all bottom-tab routes with their metadata.
@@ -180,12 +184,15 @@ private fun TabsScaffold(
                 teamsHomeView(onNavigateToFirstApi = onNavigateToFirstApi)
             }
             composable(AppRoute.HomeHome.route) {
-                HomeHomeview()
+                HomeHomeview(onNavigateToQr = { navController.navigate(QR_ROUTE) })
             }
             composable(AppRoute.NewsSection.route) { NewsHomeView() }
             composable(AppRoute.MatchesSection.route) { matchesHomeView() }
             composable(AppRoute.ProfileSection.route) {
                 profileHomeView(onLogout = onLogout)
+            }
+            composable(QR_ROUTE) {
+                QrScreenView(onBack = { navController.popBackStack() })
             }
         }
     }

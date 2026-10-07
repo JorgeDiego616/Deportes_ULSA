@@ -27,6 +27,7 @@ import com.ulsa.deportes.ui.homeSection.homeHome.viewmodel.HomeViewModel
 
 @Composable
 fun HomeHomeview(
+    onNavigateToQr: () -> Unit = {},
     viewModel: HomeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -49,13 +50,13 @@ fun HomeHomeview(
             }
         }
         is HomeUiState.Success -> {
-            HomeContent(state.data)
+            HomeContent(state.data, onNavigateToQr)
         }
     }
 }
 
 @Composable
-private fun HomeContent(homeData: HomeData) {
+private fun HomeContent(homeData: HomeData, onNavigateToQr: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -77,6 +78,20 @@ private fun HomeContent(homeData: HomeData) {
         SectionTitle("Eventos")
         Spacer(Modifier.height(8.dp))
         EventsRow(homeData.events)
+
+        Spacer(Modifier.height(28.dp))
+
+        // Botón para crear un código QR de evento.
+        Button(
+            onClick = onNavigateToQr,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+                .height(56.dp),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Text("Crear código QR", fontWeight = FontWeight.Bold)
+        }
 
         Spacer(Modifier.height(16.dp))
     }

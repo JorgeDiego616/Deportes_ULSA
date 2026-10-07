@@ -46,6 +46,8 @@ dependencies {
     implementation("androidx.navigation:navigation-compose:2.8.5")
 
     implementation("io.coil-kt:coil-compose:2.7.0")
+    // ZXing: generación del código QR en el cliente
+    implementation("com.google.zxing:core:3.5.3")
     // Retrofit
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
 
