@@ -21,8 +21,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Button
@@ -137,7 +139,7 @@ fun QrScreenView(
                 navigationIcon = {
                     IconButton(onClick = {
                         if (qrCreated) {
-                            // Si hay QR creado, volver al formulario
+                            // Si hay QR creado, volver al formulario para editar
                             qrCreated = false
                             createdQrData = null
                             form = DemoQrForm.defaults()
@@ -151,10 +153,19 @@ fun QrScreenView(
                         )
                     }
                 },
+                actions = {
+                    if (qrCreated) {
+                        // Menú para volver al perfil sin borrar el QR
+                        androidx.compose.material3.IconButton(onClick = { onBack() }) {
+                            Icon(Icons.Filled.Home, contentDescription = "Volver al perfil")
+                        }
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.White,
                     titleContentColor = Color(0xFF1A1A1A),
-                    navigationIconContentColor = Color(0xFF1A73E8)
+                    navigationIconContentColor = Color(0xFF1A73E8),
+                    actionIconContentColor = Color(0xFF1A73E8)
                 )
             )
         },
@@ -537,9 +548,9 @@ fun QrScreenView(
                     Text("¿Qué deseas hacer?", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                     Text("Elige una opción para tu código QR generado.", textAlign = TextAlign.Center)
 
-                    Row(
+                    Column(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         Button(
                             onClick = {
@@ -548,17 +559,17 @@ fun QrScreenView(
                                 form = DemoQrForm.defaults()
                                 showEditDialog = false
                             },
-                            modifier = Modifier.width(0.dp).weight(1f, fill = true),
+                            modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
                         ) {
-                            Text("Eliminar", color = Color.White, fontWeight = FontWeight.Bold)
+                            Text("Eliminar QR", color = Color.White, fontWeight = FontWeight.Bold)
                         }
                         Button(
                             onClick = {
                                 showEditDialog = false
                                 qrCreated = false
                             },
-                            modifier = Modifier.width(0.dp).weight(1f, fill = true),
+                            modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A73E8))
                         ) {
                             Row(
@@ -572,7 +583,7 @@ fun QrScreenView(
                         }
                         Button(
                             onClick = { showEditDialog = false },
-                            modifier = Modifier.width(0.dp).weight(1f, fill = true),
+                            modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF5F5F5), contentColor = Color(0xFF1A73E8))
                         ) {
                             Text("Cancelar", fontWeight = FontWeight.Bold)
