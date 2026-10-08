@@ -27,6 +27,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -64,6 +65,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ulsa.deportes.ui.qrSection.qrHome.data.QrPreferences
 import com.ulsa.deportes.ui.qrSection.qrHome.model.CreateQrResponse
 import com.ulsa.deportes.ui.qrSection.qrHome.model.DemoQrForm
 import com.ulsa.deportes.ui.qrSection.qrHome.model.TicketStatus
@@ -83,10 +85,15 @@ fun QrScreenView(
     val context = LocalContext.current
     val api = remember { QrDependencies.createApi(context) }
     val viewModel: QrViewModel = viewModel(factory = QrViewModel.Factory(api))
+    val qrPreferences = remember { QrPreferences(context) }
+    
+    // Cargar QR existente al inicio
+    var existingQr by remember { mutableStateOf<CreateQrResponse?>(qrPreferences.getQr()) }
     var form by remember { mutableStateOf(DemoQrForm.defaults()) }
     var qrCreated by remember { mutableStateOf(false) }
     var createdQrData by remember { mutableStateOf<CreateQrResponse?>(null) }
     var showEditDialog by remember { mutableStateOf(false) }
+    var showExistingQrDialog by remember { mutableStateOf(false) }
 
     val state by viewModel.state.collectAsState()
     val capacity by viewModel.capacity.collectAsState()
@@ -135,14 +142,20 @@ fun QrScreenView(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (qrCreated) "Código QR Generado" else "Crear código QR", fontWeight = FontWeight.SemiBold) },
+                title = { 
+                    Text(
+                        if (qrCreated) "Código QR Generado" 
+                        else if (existingQr != null) "Ya tienes un QR creado"
+                        else "Crear código QR", 
+                        fontWeight = FontWeight.SemiBold
+                    ) 
+                },
                 navigationIcon = {
                     IconButton(onClick = {
                         if (qrCreated) {
                             // Si hay QR creado, volver al formulario para editar
                             qrCreated = false
                             createdQrData = null
-                            form = DemoQrForm.defaults()
                         } else {
                             onBack()
                         }
@@ -154,8 +167,8 @@ fun QrScreenView(
                     }
                 },
                 actions = {
-                    if (qrCreated) {
-                        // Menú para volver al perfil sin borrar el QR
+                    if (qrCreated || existingQr != null) {
+                        // Botón para volver al perfil
                         androidx.compose.material3.IconButton(onClick = { onBack() }) {
                             Icon(Icons.Filled.Home, contentDescription = "Volver al perfil")
                         }
@@ -171,58 +184,75 @@ fun QrScreenView(
         },
         bottomBar = {
             if (qrCreated && createdQrData != null) {
-                // Botón dividido: 3/4 "Ver QR" + 1/4 icono editar/borrar
-                Row(
+                // Después de crear: botón "Guardar QR" que guarda y va al perfil
+                Button(
+                    onClick = {
+                        // Guardar QR y volver al perfil
+                        qrPreferences.saveQr(createdQrData!!)
+                        existingQr = createdQrData
+                        qrCreated = false
+                        createdQrData = null
+                        onBack()
+                    },
+                    enabled = true,
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 12.dp)
                         .height(56.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF1A73E8),
+                        contentColor = Color.White
+                    ),
+                    shape = MaterialTheme.shapes.medium
                 ) {
-                    Button(
-                        onClick = {
-                            // Mostrar el QR - navegar a vista de solo QR o mostrar en diálogo
-                        },
-                        enabled = true,
-                        modifier = Modifier
-                            .width(0.dp)
-                            .weight(0.75f, fill = true)
-                            .height(56.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFF1A73E8),
-                            contentColor = Color.White
-                        ),
-                        shape = RoundedCornerShape(topStart = 28.dp, bottomStart = 28.dp)
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Row(
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(Icons.Filled.Visibility, contentDescription = "Ver QR")
-                            Spacer(Modifier.width(8.dp))
-                            Text("Ver QR", fontWeight = FontWeight.Bold)
-                        }
+                        Icon(Icons.Filled.QrCode, contentDescription = "QR")
+                        Spacer(Modifier.width(8.dp))
+                        Text("Guardar QR", fontWeight = FontWeight.Bold)
                     }
-                    Button(
-                        onClick = { showEditDialog = true },
-                        enabled = true,
-                        modifier = Modifier
-                            .width(0.dp)
-                            .weight(0.25f, fill = true)
-                            .height(56.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = Color(0xFFF5F5F5),
-                            contentColor = Color(0xFF1A73E8)
-                        ),
-                        shape = RoundedCornerShape(topEnd = 28.dp, bottomEnd = 28.dp)
+                }
+            } else if (existingQr != null) {
+                // Ya existe QR guardado: mostrar botón para verlo
+                Button(
+                    onClick = {
+                        // Navegar a vista del QR existente (o mostrar en diálogo)
+                    },
+                    enabled = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp)
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = Color(0xFF1A73E8),
+                        contentColor = Color.White
+                    ),
+                    shape = MaterialTheme.shapes.medium
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Filled.Edit, contentDescription = "Editar o eliminar QR")
+                        Icon(Icons.Filled.Visibility, contentDescription = "Ver QR")
+                        Spacer(Modifier.width(8.dp))
+                        Text("Ver mi QR", fontWeight = FontWeight.Bold)
                     }
                 }
             } else {
                 // Botón normal para crear QR
                 Button(
-                    onClick = { viewModel.createQr(form.toRequest()) },
+                    onClick = { 
+                        if (isFormValid && state !is QrUiState.Loading) {
+                            if (existingQr != null) {
+                                // Ya hay un QR guardado, mostrar diálogo
+                                showExistingQrDialog = true
+                            } else {
+                                viewModel.createQr(form.toRequest())
+                            }
+                        }
+                    },
                     enabled = isFormValid && state !is QrUiState.Loading,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -247,7 +277,8 @@ fun QrScreenView(
         },
         containerColor = Color.White
     ) { innerPadding ->
-        if (!qrCreated) {
+        // Mostrar formulario solo si NO hay QR creado Y NO hay QR existente
+        if (!qrCreated && existingQr == null) {
             // FORMULARIO
             Column(
                 modifier = Modifier
@@ -432,7 +463,8 @@ fun QrScreenView(
                 Spacer(Modifier.height(16.dp))
             }
         } else {
-            // VISTA DE QR CREADO - Mostrar ticket compacto con opción de ver completo
+            // VISTA DE QR (recién creado o existente)
+            val qrToShow = createdQrData ?: existingQr
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -442,14 +474,14 @@ fun QrScreenView(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                createdQrData?.let { data ->
-                    SectionCard(title = "Tu Pase de Acceso") {
+                qrToShow?.let { data ->
+                    SectionCard(title = if (qrCreated) "Tu Pase de Acceso" else "Tu QR Guardado") {
                         Column(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            // QR Code pequeño
+                            // QR Code
                             val bitmap by produceState<android.graphics.Bitmap?>(initialValue = null, data.qr.token) {
                                 value = withContext(Dispatchers.Default) { QrGenerator.generate(data.qr.token) }
                             }
@@ -514,20 +546,63 @@ fun QrScreenView(
                     }
                 }
 
-                Text(
-                    "Usa el botón 'Ver QR' para ver el código completo o 'Editar' para modificarlo",
-                    textAlign = TextAlign.Center,
-                    color = Color(0xFF6B7280),
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
-                )
+                // Mensaje si ya tiene QR guardado y no está en modo creación
+                if (existingQr != null && !qrCreated) {
+                    Text(
+                        "Ya tienes un código QR guardado. Para crear uno nuevo, elimina el actual.",
+                        textAlign = TextAlign.Center,
+                        color = Color(0xFF6B7280),
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
+                    )
+                } else if (qrCreated) {
+                    Text(
+                        "Presiona 'Guardar QR' para guardarlo y volver al perfil.",
+                        textAlign = TextAlign.Center,
+                        color = Color(0xFF6B7280),
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
+                    )
+                }
 
                 Spacer(Modifier.height(16.dp))
             }
         }
     }
 
-    // Diálogo para editar o eliminar QR
+    // Diálogo cuando ya existe QR e intenta crear uno nuevo
+    if (showExistingQrDialog) {
+        AlertDialog(
+            onDismissRequest = { showExistingQrDialog = false },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        // Eliminar QR existente y permitir crear nuevo
+                        qrPreferences.clearQr()
+                        existingQr = null
+                        showExistingQrDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
+                ) {
+                    Text("Eliminar QR actual", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = { showExistingQrDialog = false },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF5F5F5), contentColor = Color(0xFF1A73E8))
+                ) {
+                    Text("Cancelar", fontWeight = FontWeight.Bold)
+                }
+            },
+            title = { Text("QR ya existente", fontWeight = FontWeight.Bold) },
+            text = {
+                Text("No puedes crear un código QR si ya tienes creado uno. ¿Deseas eliminar el QR actual para crear uno nuevo?")
+            }
+        )
+    }
+
+    // Diálogo para editar o eliminar QR (para QR recién creado antes de guardar)
     if (showEditDialog) {
         Dialog(
             onDismissRequest = { showEditDialog = false },
@@ -554,9 +629,9 @@ fun QrScreenView(
                     ) {
                         Button(
                             onClick = {
+                                // Eliminar QR recién creado (no guardado aún)
                                 qrCreated = false
                                 createdQrData = null
-                                form = DemoQrForm.defaults()
                                 showEditDialog = false
                             },
                             modifier = Modifier.fillMaxWidth(),
@@ -568,6 +643,7 @@ fun QrScreenView(
                             onClick = {
                                 showEditDialog = false
                                 qrCreated = false
+                                // Volver al formulario con los datos para editar
                             },
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A73E8))
