@@ -41,7 +41,6 @@ import com.ulsa.deportes.ui.auth.viewmodel.LogoutViewModel
 import com.ulsa.deportes.ui.onboarding.data.OnboardingPreferences
 import com.ulsa.deportes.ui.onboarding.view.OnboardingScreenView
 import com.ulsa.deportes.ui.onboarding.viewmodel.OnboardingViewModel
-import com.ulsa.deportes.ui.qrSection.qrHome.model.CreateQrResponse
 import com.ulsa.deportes.ui.qrSection.qrHome.view.QrScreenView
 
 /** Ruta interna (no es tab) para la pantalla de creación de QR. */
@@ -192,13 +191,7 @@ private fun TabsScaffold(
             composable(AppRoute.ProfileSection.route) {
                 profileHomeView(
                     onLogout = onLogout,
-                    onNavigateToQr = { navController.navigate(QR_ROUTE) },
-                    onViewQr = { qrData ->
-                        // Navegar a la pantalla de QR con el QR existente
-                        navController.navigate(QR_ROUTE) {
-                            // El QrScreenView leerá el QR de QrPreferences automáticamente
-                        }
-                    }
+                    onNavigateToQr = { navController.navigate(QR_ROUTE) }
                 )
             }
             composable(QR_ROUTE) {

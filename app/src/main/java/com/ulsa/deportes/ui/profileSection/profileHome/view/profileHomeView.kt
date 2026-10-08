@@ -35,13 +35,12 @@ import com.ulsa.deportes.ui.qrSection.qrHome.model.CreateQrResponse
 fun profileHomeView(
     onLogout: () -> Unit = {},
     onNavigateToQr: () -> Unit = {},
-    onViewQr: (CreateQrResponse) -> Unit = {},
     homeViewModel: profileHomeViewModel = viewModel()
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val qrPreferences = remember { QrPreferences(context) }
-    val savedQr by remember { 
-        androidx.compose.runtime.mutableStateOf(qrPreferences.getQr()) 
+    val qrList by remember { 
+        androidx.compose.runtime.mutableStateOf(qrPreferences.getQrList()) 
     }
 
     Column(
@@ -55,20 +54,27 @@ fun profileHomeView(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Mostrar botón "Ver QR" si hay QR guardado
-        val currentQr = savedQr
-        if (currentQr != null) {
+        // Mostrar info de QRs guardados
+        if (qrList.isNotEmpty()) {
+            Text(
+                "Tienes ${qrList.size} código(s) QR guardado(s)",
+                style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
+                color = androidx.compose.ui.graphics.Color(0xFF6B7280),
+                fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+            )
+            Spacer(modifier = Modifier.height(16.dp))
+            
             Button(
-                onClick = { onViewQr(currentQr) },
+                onClick = onNavigateToQr,
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = androidx.compose.ui.graphics.Color(0xFF1A73E8),
                     contentColor = androidx.compose.ui.graphics.Color.White
                 )
             ) {
-                Icon(imageVector = Icons.Filled.Visibility, contentDescription = "Ver QR")
+                Icon(imageVector = Icons.Filled.Visibility, contentDescription = "Ver QRs")
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Ver mi QR", fontWeight = FontWeight.Bold)
+                Text("Ver mis QRs", fontWeight = FontWeight.Bold)
             }
             
             Spacer(modifier = Modifier.height(12.dp))
