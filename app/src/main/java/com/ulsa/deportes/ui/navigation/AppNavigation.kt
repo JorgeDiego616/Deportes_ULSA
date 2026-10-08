@@ -184,12 +184,15 @@ private fun TabsScaffold(
                 teamsHomeView(onNavigateToFirstApi = onNavigateToFirstApi)
             }
             composable(AppRoute.HomeHome.route) {
-                HomeHomeview(onNavigateToQr = { navController.navigate(QR_ROUTE) })
+                HomeHomeview()
             }
             composable(AppRoute.NewsSection.route) { NewsHomeView() }
             composable(AppRoute.MatchesSection.route) { matchesHomeView() }
             composable(AppRoute.ProfileSection.route) {
-                profileHomeView(onLogout = onLogout)
+                profileHomeView(
+                    onLogout = onLogout,
+                    onNavigateToQr = { navController.navigate(QR_ROUTE) }
+                )
             }
             composable(QR_ROUTE) {
                 QrScreenView(onBack = { navController.popBackStack() })

@@ -54,7 +54,7 @@ dependencies {
     // Converter de Gson (para el GsonConverterFactory)
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
 
-    implementation("androidx.compose.material:material-icons-extended:<version>")
+    implementation("androidx.compose.material:material-icons-extended:1.7.8")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.5")
 
     implementation(libs.androidx.core.ktx)

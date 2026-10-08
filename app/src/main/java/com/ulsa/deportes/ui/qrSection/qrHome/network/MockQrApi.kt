@@ -2,7 +2,6 @@ package com.ulsa.deportes.ui.qrSection.qrHome.network
 
 import com.ulsa.deportes.ui.qrSection.qrHome.model.AccessRules
 import com.ulsa.deportes.ui.qrSection.qrHome.model.CapacityStatus
-import com.ulsa.deportes.ui.qrSection.qrHome.model.CreationMode
 import com.ulsa.deportes.ui.qrSection.qrHome.model.CreateQrRequest
 import com.ulsa.deportes.ui.qrSection.qrHome.model.CreateQrResponse
 import com.ulsa.deportes.ui.qrSection.qrHome.model.EventSummary
@@ -34,16 +33,17 @@ class MockQrApi : QrApi {
             ),
             ticket = TicketInfo(status = TicketStatus.ACTIVE),
             eventSummary = EventSummary(
-                title = "Clásico ULSA 2026",
-                category = "Fútbol",
-                venue = "Estadio La Salle",
+                // Eco del formulario; el backend real traería estos datos del evento.
+                title = request.eventTitle.ifBlank { "Clásico ULSA 2026" },
+                category = request.eventCategory.ifBlank { "Fútbol" },
+                venue = request.eventVenue.ifBlank { "Estadio La Salle" },
                 startsAt = request.validFrom
             ),
-            userSummary = if (request.creationMode == CreationMode.DYNAMIC_INDIVIDUAL_PASS) {
-                UserSummary(studentName = "Diego Chaparro", studentId = "14446", faculty = "Ingeniería")
-            } else {
-                null
-            },
+            userSummary = UserSummary(
+                studentName = request.studentName.ifBlank { "Jorge Chaparro" },
+                studentId = request.studentId.ifBlank { "14446" },
+                faculty = request.faculty.ifBlank { "Ingeniería" }
+            ),
             accessRules = AccessRules(
                 entryGate = "Puerta Norte",
                 validFrom = request.validFrom,

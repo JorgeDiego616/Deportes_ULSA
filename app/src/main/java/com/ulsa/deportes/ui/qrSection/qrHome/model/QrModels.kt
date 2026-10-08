@@ -49,7 +49,17 @@ data class CreateQrRequest(
     @SerializedName("user_id") val userId: String? = null,
     @SerializedName("valid_from") val validFrom: String,
     @SerializedName("valid_until") val validUntil: String,
-    @SerializedName("security_config") val securityConfig: SecurityConfig = SecurityConfig()
+    @SerializedName("security_config") val securityConfig: SecurityConfig = SecurityConfig(),
+    // Datos descriptivos del evento y del portador. Hoy los llena el formulario
+    // de la pantalla de QR (y el mock los devuelve en event_summary /
+    // user_summary). Cuando el backend exista, serán los inputs de la mutation
+    // `crearQR` (ver QR-CONTEXTO.md, sección 11).
+    @SerializedName("event_title") val eventTitle: String = "",
+    @SerializedName("event_category") val eventCategory: String = "",
+    @SerializedName("event_venue") val eventVenue: String = "",
+    @SerializedName("student_name") val studentName: String = "",
+    @SerializedName("student_id") val studentId: String = "",
+    @SerializedName("faculty") val faculty: String = "",
 ) {
     init {
         require(creationMode != CreationMode.DYNAMIC_INDIVIDUAL_PASS || userId != null) {
@@ -112,18 +122,51 @@ fun AccessRules.isExpired(now: Instant = Instant.now()): Boolean =
     now.isAfter(Instant.parse(validUntil))
 
 /**
- * Evento de demostración. Mientras el backend no exponga eventos reales, la
- * pantalla de QR usa este pase estático para poder probar toda la UI.
+ * Datos editables del formulario de la pantalla de QR.
+ *
+ * Mientras el backend no exista, el usuario los llena aquí y viajan dentro del
+ * [CreateQrRequest] para que el mock los "ecoe" en la respuesta. Cuando se
+ * implemente `crearQR` en UlsaHub, este mismo objeto se convierte en los inputs
+ * de la mutation GraphQL (evento + portador), así el contrato no cambia.
  */
-object DemoQrEvent {
-    fun request(now: Instant = Instant.now()): CreateQrRequest {
+data class QrFormData(
+    val studentName: String,
+    val studentId: String,
+    val faculty: String,
+    val eventTitle: String,
+    val eventCategory: String,
+    val eventVenue: String,
+    val eventId: String,
+    val creationMode: CreationMode,
+) {
+    fun toRequest(now: Instant = Instant.now()): CreateQrRequest {
         val until = now.plus(30, ChronoUnit.DAYS)
         return CreateQrRequest(
-            eventId = "evento-demo-ulsa",
-            creationMode = CreationMode.STATIC_EVENT_CHECKIN,
-            userId = null,
+            eventId = eventId,
+            creationMode = creationMode,
+            userId = if (creationMode == CreationMode.DYNAMIC_INDIVIDUAL_PASS) studentId else null,
             validFrom = now.toString(),
-            validUntil = until.toString()
+            validUntil = until.toString(),
+            eventTitle = eventTitle,
+            eventCategory = eventCategory,
+            eventVenue = eventVenue,
+            studentName = studentName,
+            studentId = studentId,
+            faculty = faculty,
         )
     }
+}
+
+/** Valores iniciales del formulario (evento demo para probar toda la UI). */
+object DemoQrForm {
+    fun defaults(): QrFormData = QrFormData(
+        studentName = "Jorge Chaparro",
+        studentId = "14446",
+        faculty = "Ingeniería",
+        eventTitle = "Clásico ULSA 2026",
+        eventCategory = "Fútbol",
+        eventVenue = "Estadio La Salle",
+        eventId = "evento-demo-ulsa",
+        creationMode = CreationMode.STATIC_EVENT_CHECKIN,
+    )
 }
