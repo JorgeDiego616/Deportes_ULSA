@@ -21,6 +21,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.AccessTime
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
@@ -28,6 +31,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.QrCode
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Visibility
+
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -61,14 +65,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ulsa.deportes.ui.qrSection.qrHome.data.EventPreferences
 import com.ulsa.deportes.ui.qrSection.qrHome.data.QrPreferences
 import com.ulsa.deportes.ui.qrSection.qrHome.model.CreateQrResponse
 import com.ulsa.deportes.ui.qrSection.qrHome.model.DemoQrForm
+import com.ulsa.deportes.ui.qrSection.qrHome.model.EventCategory
+import com.ulsa.deportes.ui.qrSection.qrHome.model.EventFormData
 import com.ulsa.deportes.ui.qrSection.qrHome.model.TicketStatus
 import com.ulsa.deportes.ui.qrSection.qrHome.model.isExpired
 import com.ulsa.deportes.ui.qrSection.qrHome.network.QrDependencies
@@ -87,10 +95,22 @@ fun QrScreenView(
     val api = remember { QrDependencies.createApi(context) }
     val viewModel: QrViewModel = viewModel(factory = QrViewModel.Factory(api))
     val qrPreferences = remember { QrPreferences(context) }
+    val eventPreferences = remember { EventPreferences(context) }
     
-    // Cargar lista de QRs existentes al inicio
-    var existingQrList by remember { mutableStateOf<List<CreateQrResponse>>(qrPreferences.getQrList()) }
-    var form by remember { mutableStateOf(DemoQrForm.defaults()) }
+    // Cargar lista de eventos existentes al inicio
+    var existingEventList by remember { mutableStateOf<List<CreateQrResponse>>(qrPreferences.getQrList()) }
+    var form by remember { mutableStateOf(EventFormData(
+        organizerName = "Jorge Chaparro",
+        organizerId = "14446",
+        organizerFaculty = "Ingeniería",
+        title = "Clásico ULSA 2026",
+        category = EventCategory.DEPORTIVO,
+        venue = "Estadio La Salle",
+        date = java.time.LocalDate.now().plusDays(7),
+        startTime = java.time.LocalTime.of(18, 0),
+        endTime = java.time.LocalTime.of(20, 0),
+        capacity = 100
+    )) }
     var qrCreated by remember { mutableStateOf(false) }
     var createdQrData by remember { mutableStateOf<CreateQrResponse?>(null) }
     var showEditDialog by remember { mutableStateOf(false) }
@@ -101,12 +121,12 @@ fun QrScreenView(
     val capacity by viewModel.capacity.collectAsState()
 
     // Helpers
-    val hasAnyQr = existingQrList.isNotEmpty()
-    val isAtMaxLimit = existingQrList.size >= 3
-    val latestQr = existingQrList.lastOrNull()
+    val hasAnyQr = existingEventList.isNotEmpty()
+    val isAtMaxLimit = existingEventList.size >= 3
+    val latestQr = existingEventList.lastOrNull()
 
-    // Opciones para Tipo de evento
-    val eventCategories = listOf("Deportivo", "Académico", "Cultural/Artística")
+    // Opciones para Tipo de evento (usando enum)
+    val eventCategories = EventCategory.values()
     var categoryExpanded by remember { mutableStateOf(false) }
 
     // Opciones para Sedes (basadas en infraestructura ULSA)
@@ -124,17 +144,22 @@ fun QrScreenView(
 
     // Validación del formulario - todos los campos requeridos
     val isFormValid = remember(form) {
-        form.studentName.isNotBlank() &&
-        form.studentId.isNotBlank() &&
-        form.faculty.isNotBlank() &&
-        form.eventTitle.isNotBlank() &&
-        form.eventCategory.isNotBlank() &&
-        form.eventVenue.isNotBlank()
+        form.organizerName.isNotBlank() &&
+        form.organizerId.isNotBlank() &&
+        form.organizerFaculty.isNotBlank() &&
+        form.title.isNotBlank() &&
+        form.category != null &&
+        form.venue.isNotBlank() &&
+        form.capacity > 0
     }
 
-    // Cargar la capacidad del evento una sola vez al abrir la pantalla.
-    LaunchedEffect(form.eventId) {
-        viewModel.loadCapacity(form.eventId)
+    // Observar éxito en la creación del evento
+    LaunchedEffect(state) {
+        val currentState = state
+        if (currentState is QrUiState.Success) {
+            qrCreated = true
+            createdQrData = currentState.data
+        }
     }
 
     // Observar éxito en la creación del QR
@@ -154,7 +179,7 @@ fun QrScreenView(
                         when {
                             qrCreated -> "Evento Creado"
                             selectedQrForView != null -> "Ver Evento"
-                            hasAnyQr -> "Tus Eventos (${existingQrList.size}/3)"
+                            hasAnyQr -> "Tus Eventos (${existingEventList.size}/3)"
                             else -> "Crear Evento"
                         }, 
                         fontWeight = FontWeight.SemiBold
@@ -202,7 +227,7 @@ fun QrScreenView(
                     Button(
                         onClick = {
                             qrPreferences.saveQr(createdQrData!!)
-                            existingQrList = qrPreferences.getQrList()
+                            existingEventList = qrPreferences.getQrList()
                             qrCreated = false
                             createdQrData = null
                             onBack()
@@ -249,7 +274,7 @@ fun QrScreenView(
                             ) {
                                 Icon(Icons.Filled.Event, contentDescription = "Nuevo Evento")
                                 Spacer(Modifier.width(8.dp))
-                                Text("Crear otro Evento (${existingQrList.size}/3)", fontWeight = FontWeight.Bold)
+                                Text("Crear otro Evento (${existingEventList.size}/3)", fontWeight = FontWeight.Bold)
                             }
                         }
                     } else {
@@ -274,7 +299,23 @@ fun QrScreenView(
                     Button(
                         onClick = { 
                             if (isFormValid && state !is QrUiState.Loading) {
-                                viewModel.createQr(form.toRequest())
+                                // Convertir EventFormData a CreateQrRequest para el mock
+                                val now = java.time.Instant.now()
+                                val request = com.ulsa.deportes.ui.qrSection.qrHome.model.CreateQrRequest(
+                                    eventId = form.eventId,
+                                    creationMode = com.ulsa.deportes.ui.qrSection.qrHome.model.CreationMode.STATIC_EVENT_CHECKIN,
+                                    userId = null,
+                                    validFrom = now.toString(),
+                                    validUntil = now.plus(30, java.time.temporal.ChronoUnit.DAYS).toString(),
+                                    securityConfig = com.ulsa.deportes.ui.qrSection.qrHome.model.SecurityConfig(),
+                                    eventTitle = form.title,
+                                    eventCategory = form.category.name,
+                                    eventVenue = form.venue,
+                                    studentName = form.organizerName,
+                                    studentId = form.organizerId,
+                                    faculty = form.organizerFaculty
+                                )
+                                viewModel.createQr(request)
                             }
                         },
                         enabled = isFormValid && state !is QrUiState.Loading,
@@ -315,12 +356,12 @@ fun QrScreenView(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Sección 1: Datos del Administrador
-                SectionCard(title = "Datos del Administrador") {
+                SectionCard(title = "Datos del Organizador") {
                     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         OutlinedTextField(
-                            value = form.studentName,
-                            onValueChange = { form = form.copy(studentName = it) },
-                            label = { Text("Nombre del administrador") },
+                            value = form.organizerName,
+                            onValueChange = { form = form.copy(organizerName = it) },
+                            label = { Text("Nombre del organizador") },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
@@ -332,8 +373,8 @@ fun QrScreenView(
                         )
 
                         OutlinedTextField(
-                            value = form.studentId,
-                            onValueChange = { form = form.copy(studentId = it) },
+                            value = form.organizerId,
+                            onValueChange = { form = form.copy(organizerId = it) },
                             label = { Text("Matrícula / ID") },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
@@ -346,8 +387,8 @@ fun QrScreenView(
                         )
 
                         OutlinedTextField(
-                            value = form.faculty,
-                            onValueChange = { form = form.copy(faculty = it) },
+                            value = form.organizerFaculty,
+                            onValueChange = { form = form.copy(organizerFaculty = it) },
                             label = { Text("Facultad / Departamento") },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
@@ -365,8 +406,8 @@ fun QrScreenView(
                 SectionCard(title = "Datos del Evento") {
                     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         OutlinedTextField(
-                            value = form.eventTitle,
-                            onValueChange = { form = form.copy(eventTitle = it) },
+                            value = form.title,
+                            onValueChange = { form = form.copy(title = it) },
                             label = { Text("Título del evento") },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
@@ -378,14 +419,14 @@ fun QrScreenView(
                             )
                         )
 
-                        // Dropdown Tipo de evento
+                        // Dropdown Tipo de evento (enum)
                         ExposedDropdownMenuBox(
                             expanded = categoryExpanded,
                             onExpandedChange = { categoryExpanded = !categoryExpanded },
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             OutlinedTextField(
-                                value = form.eventCategory,
+                                value = form.category?.name ?: "",
                                 onValueChange = {},
                                 readOnly = true,
                                 label = { Text("Tipo de evento") },
@@ -406,9 +447,9 @@ fun QrScreenView(
                             ) {
                                 eventCategories.forEach { option ->
                                     DropdownMenuItem(
-                                        text = { Text(option) },
+                                        text = { Text(option.name) },
                                         onClick = {
-                                            form = form.copy(eventCategory = option)
+                                            form = form.copy(category = option)
                                             categoryExpanded = false
                                         }
                                     )
@@ -423,7 +464,7 @@ fun QrScreenView(
                             modifier = Modifier.fillMaxWidth()
                         ) {
                             OutlinedTextField(
-                                value = form.eventVenue,
+                                value = form.venue,
                                 onValueChange = {},
                                 readOnly = true,
                                 label = { Text("Sede") },
@@ -446,13 +487,95 @@ fun QrScreenView(
                                     DropdownMenuItem(
                                         text = { Text(option) },
                                         onClick = {
-                                            form = form.copy(eventVenue = option)
+                                            form = form.copy(venue = option)
                                             venueExpanded = false
                                         }
                                     )
                                 }
                             }
                         }
+
+                        // Fecha del evento (campo de texto con formato dd/MM/yyyy)
+                        OutlinedTextField(
+                            value = form.date.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                            onValueChange = { newValue ->
+                                // Intentar parsear la fecha si tiene formato válido
+                                try {
+                                    val parsed = java.time.LocalDate.parse(newValue, java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                                    form = form.copy(date = parsed)
+                                } catch (e: Exception) {
+                                    // Ignorar formato inválido temporalmente
+                                }
+                            },
+                            label = { Text("Fecha del evento (dd/MM/yyyy)") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFF1A73E8),
+                                unfocusedBorderColor = Color(0xFFE6EAF2),
+                                focusedLabelColor = Color(0xFF1A73E8),
+                                cursorColor = Color(0xFF1A73E8)
+                            )
+                        )
+
+                        // Hora de inicio (campo de texto HH:mm)
+                        OutlinedTextField(
+                            value = form.startTime.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")),
+                            onValueChange = { newValue ->
+                                try {
+                                    val parsed = java.time.LocalTime.parse(newValue, java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
+                                    form = form.copy(startTime = parsed)
+                                } catch (e: Exception) {
+                                    // Ignorar formato inválido
+                                }
+                            },
+                            label = { Text("Hora de inicio (HH:mm)") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFF1A73E8),
+                                unfocusedBorderColor = Color(0xFFE6EAF2),
+                                focusedLabelColor = Color(0xFF1A73E8),
+                                cursorColor = Color(0xFF1A73E8)
+                            )
+                        )
+
+                        // Hora de fin (campo de texto HH:mm)
+                        OutlinedTextField(
+                            value = form.endTime.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")),
+                            onValueChange = { newValue ->
+                                try {
+                                    val parsed = java.time.LocalTime.parse(newValue, java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
+                                    form = form.copy(endTime = parsed)
+                                } catch (e: Exception) {
+                                    // Ignorar formato inválido
+                                }
+                            },
+                            label = { Text("Hora de fin (HH:mm)") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFF1A73E8),
+                                unfocusedBorderColor = Color(0xFFE6EAF2),
+                                focusedLabelColor = Color(0xFF1A73E8),
+                                cursorColor = Color(0xFF1A73E8)
+                            )
+                        )
+
+                        // Capacidad
+                        OutlinedTextField(
+                            value = form.capacity.toString(),
+                            onValueChange = { form = form.copy(capacity = it.toIntOrNull() ?: 100) },
+                            label = { Text("Capacidad (cupos)") },
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = Color(0xFF1A73E8),
+                                unfocusedBorderColor = Color(0xFFE6EAF2),
+                                focusedLabelColor = Color(0xFF1A73E8),
+                                cursorColor = Color(0xFF1A73E8)
+                            )
+                        )
                     }
                 }
 
@@ -584,14 +707,14 @@ fun QrScreenView(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        "Tienes ${existingQrList.size} evento(s) guardado(s)",
+                        "Tienes ${existingEventList.size} evento(s) guardado(s)",
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color(0xFF6B7280),
                         textAlign = TextAlign.Center
                     )
 
-                    existingQrList.reversed().forEachIndexed { index, qr ->
-                        val reversedIndex = existingQrList.size - index
+                    existingEventList.reversed().forEachIndexed { index, qr ->
+                        val reversedIndex = existingEventList.size - index
                         SectionCard(title = "Evento #$reversedIndex - ${qr.eventSummary.title}") {
                             Column(
                                 modifier = Modifier.fillMaxWidth(),
@@ -640,7 +763,7 @@ fun QrScreenView(
                                         Button(
                                             onClick = {
                                                 qrPreferences.removeQr(qr.ticketId)
-                                                existingQrList = qrPreferences.getQrList()
+                                                existingEventList = qrPreferences.getQrList()
                                             },
                                             colors = ButtonDefaults.buttonColors(
                                                 containerColor = Color(0xFFD32F2F),
@@ -761,7 +884,7 @@ fun QrScreenView(
                 Button(
                     onClick = {
                         qrPreferences.clearAll()
-                        existingQrList = qrPreferences.getQrList()
+                        existingEventList = qrPreferences.getQrList()
                         showExistingQrDialog = false
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
