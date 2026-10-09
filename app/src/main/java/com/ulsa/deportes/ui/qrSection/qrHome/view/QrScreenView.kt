@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.QrCode
+import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -151,10 +152,10 @@ fun QrScreenView(
                 title = { 
                     Text(
                         when {
-                            qrCreated -> "Código QR Generado"
-                            selectedQrForView != null -> "Ver QR"
-                            hasAnyQr -> "Tus Códigos QR (${existingQrList.size}/3)"
-                            else -> "Crear código QR"
+                            qrCreated -> "Evento Creado"
+                            selectedQrForView != null -> "Ver Evento"
+                            hasAnyQr -> "Tus Eventos (${existingQrList.size}/3)"
+                            else -> "Crear Evento"
                         }, 
                         fontWeight = FontWeight.SemiBold
                     ) 
@@ -221,9 +222,9 @@ fun QrScreenView(
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Filled.QrCode, contentDescription = "QR")
+                            Icon(Icons.Filled.Event, contentDescription = "Evento")
                             Spacer(Modifier.width(8.dp))
-                            Text("Guardar QR", fontWeight = FontWeight.Bold)
+                            Text("Guardar Evento", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -246,9 +247,9 @@ fun QrScreenView(
                                 horizontalArrangement = Arrangement.Center,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(Icons.Filled.QrCode, contentDescription = "Nuevo QR")
+                                Icon(Icons.Filled.Event, contentDescription = "Nuevo Evento")
                                 Spacer(Modifier.width(8.dp))
-                                Text("Crear otro QR (${existingQrList.size}/3)", fontWeight = FontWeight.Bold)
+                                Text("Crear otro Evento (${existingQrList.size}/3)", fontWeight = FontWeight.Bold)
                             }
                         }
                     } else {
@@ -265,7 +266,7 @@ fun QrScreenView(
                             ),
                             shape = MaterialTheme.shapes.medium
                         ) {
-                            Text("Límite alcanzado (3/3 QR)", fontWeight = FontWeight.Bold)
+                            Text("Límite alcanzado (3/3 Eventos)", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -293,7 +294,7 @@ fun QrScreenView(
                         if (currentState is QrUiState.Loading) {
                             CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
                         } else {
-                            Text("Crear código QR", fontWeight = FontWeight.Bold)
+                            Text("Generar Evento", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -500,7 +501,7 @@ fun QrScreenView(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     val data = selectedQrForView!!
-                    SectionCard(title = "Código QR") {
+                    SectionCard(title = "Evento") {
                         Column(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalAlignment = Alignment.CenterHorizontally,
@@ -513,7 +514,7 @@ fun QrScreenView(
                             bitmap?.let {
                                 Image(
                                     bitmap = it.asImageBitmap(),
-                                    contentDescription = "Código QR",
+                                    contentDescription = "QR del Evento",
                                     modifier = Modifier.size(240.dp)
                                 )
                             } ?: CircularProgressIndicator(color = Color(0xFF1A73E8))
@@ -572,7 +573,7 @@ fun QrScreenView(
                     Spacer(Modifier.height(16.dp))
                 }
             } else if (hasAnyQr) {
-                // Lista de QRs guardados
+                // Lista de Eventos guardados
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -583,7 +584,7 @@ fun QrScreenView(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        "Tienes ${existingQrList.size} código(s) QR guardado(s)",
+                        "Tienes ${existingQrList.size} evento(s) guardado(s)",
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color(0xFF6B7280),
                         textAlign = TextAlign.Center
@@ -591,7 +592,7 @@ fun QrScreenView(
 
                     existingQrList.reversed().forEachIndexed { index, qr ->
                         val reversedIndex = existingQrList.size - index
-                        SectionCard(title = "QR #$reversedIndex - ${qr.eventSummary.title}") {
+                        SectionCard(title = "Evento #$reversedIndex - ${qr.eventSummary.title}") {
                             Column(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -658,7 +659,7 @@ fun QrScreenView(
                     Spacer(Modifier.height(16.dp))
                 }
             } else if (qrCreated) {
-                // QR recién creado (antes de guardar)
+                // Evento recién creado (antes de guardar)
                 val data = createdQrData!!
                 Column(
                     modifier = Modifier
@@ -669,7 +670,7 @@ fun QrScreenView(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    SectionCard(title = "Tu Pase de Acceso") {
+                    SectionCard(title = "Tu Evento") {
                         Column(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalAlignment = Alignment.CenterHorizontally,
@@ -682,7 +683,7 @@ fun QrScreenView(
                             bitmap?.let {
                                 Image(
                                     bitmap = it.asImageBitmap(),
-                                    contentDescription = "Código QR",
+                                    contentDescription = "QR del Evento",
                                     modifier = Modifier.size(200.dp)
                                 )
                             } ?: CircularProgressIndicator(color = Color(0xFF1A73E8))
@@ -739,7 +740,7 @@ fun QrScreenView(
                     }
 
                     Text(
-                        "Presiona 'Guardar QR' para guardarlo y volver al perfil.",
+                        "Presiona 'Guardar Evento' para guardarlo y volver al perfil.",
                         textAlign = TextAlign.Center,
                         color = Color(0xFF6B7280),
                         style = MaterialTheme.typography.bodySmall,
@@ -897,7 +898,7 @@ private fun TicketContent(data: CreateQrResponse) {
     bitmap?.let {
         Image(
             bitmap = it.asImageBitmap(),
-            contentDescription = "Código QR",
+            contentDescription = "QR del Evento",
             modifier = Modifier.size(260.dp)
         )
     } ?: CircularProgressIndicator(color = Color(0xFF1A73E8))

@@ -10,7 +10,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.QrCode
+import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -54,10 +54,10 @@ fun profileHomeView(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Mostrar info de QRs guardados
+        // Mostrar info de Eventos guardados
         if (qrList.isNotEmpty()) {
             Text(
-                "Tienes ${qrList.size} código(s) QR guardado(s)",
+                "Tienes ${qrList.size} evento(s) guardado(s)",
                 style = androidx.compose.material3.MaterialTheme.typography.bodyMedium,
                 color = androidx.compose.ui.graphics.Color(0xFF6B7280),
                 fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
@@ -72,9 +72,9 @@ fun profileHomeView(
                     contentColor = androidx.compose.ui.graphics.Color.White
                 )
             ) {
-                Icon(imageVector = Icons.Filled.Visibility, contentDescription = "Ver QRs")
+                Icon(imageVector = Icons.Filled.Visibility, contentDescription = "Ver Eventos")
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Ver mis QRs", fontWeight = FontWeight.Bold)
+                Text("Ver mis Eventos", fontWeight = FontWeight.Bold)
             }
             
             Spacer(modifier = Modifier.height(12.dp))
@@ -84,9 +84,9 @@ fun profileHomeView(
             onClick = onNavigateToQr,
             shape = RoundedCornerShape(12.dp)
         ) {
-            Icon(imageVector = Icons.Filled.QrCode, contentDescription = null)
+            Icon(imageVector = Icons.Filled.Event, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Crear código QR", fontWeight = FontWeight.Bold)
+            Text("Crear Evento", fontWeight = FontWeight.Bold)
         }
 
         Spacer(modifier = Modifier.height(12.dp))
