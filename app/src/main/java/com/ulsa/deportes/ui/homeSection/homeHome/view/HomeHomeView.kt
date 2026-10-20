@@ -1,11 +1,18 @@
 package com.ulsa.deportes.ui.homeSection.homeHome.view
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.SportsSoccer
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -16,11 +23,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.ulsa.deportes.ui.components.ErrorView
+import com.ulsa.deportes.ui.components.LoadingView
+import com.ulsa.deportes.ui.components.SportCard
+import com.ulsa.deportes.ui.components.SportHeader
 import com.ulsa.deportes.ui.homeSection.homeHome.model.*
 import com.ulsa.deportes.ui.homeSection.homeHome.viewmodel.HomeUiState
 import com.ulsa.deportes.ui.homeSection.homeHome.viewmodel.HomeViewModel
@@ -33,20 +44,13 @@ fun HomeHomeview(
 
     when (val state = uiState) {
         is HomeUiState.Loading -> {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
+            LoadingView(message = "Cargando el centro deportivo ULSA...")
         }
         is HomeUiState.Error -> {
-            Box(Modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(state.message, textAlign = TextAlign.Center)
-                    Spacer(Modifier.height(12.dp))
-                    Button(onClick = { viewModel.loadHome() }) {
-                        Text("Reintentar")
-                    }
-                }
-            }
+            ErrorView(
+                message = state.message,
+                onRetry = { viewModel.loadHome() }
+            )
         }
         is HomeUiState.Success -> {
             HomeContent(state.data)
@@ -59,46 +63,111 @@ private fun HomeContent(homeData: HomeData) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
             .verticalScroll(rememberScrollState())
-            .padding(vertical = 16.dp)
     ) {
-        SectionTitle("Resultados")
+        // Banner Superior Institucional ULSA
+        HomeHeaderBanner()
+
+        Spacer(Modifier.height(16.dp))
+
+        // Sección 1: Resultados Deportivos (Horizontal)
+        SportHeader(
+            title = "Resultados Recientes",
+            subtitle = "Últimos marcadores de los equipos ULSA"
+        )
         Spacer(Modifier.height(8.dp))
         ScoresRow(homeData.scores)
 
-        Spacer(Modifier.height(28.dp))
+        Spacer(Modifier.height(24.dp))
 
-        SectionTitle("Noticias")
+        // Sección 2: Noticias Deportivas (Vertical)
+        SportHeader(
+            title = "Noticias y Novedades",
+            subtitle = "Mantente al día con el deporte universitario"
+        )
         Spacer(Modifier.height(8.dp))
         NewsSectionList(homeData.news)
 
-        Spacer(Modifier.height(28.dp))
+        Spacer(Modifier.height(24.dp))
 
-        SectionTitle("Eventos")
+        // Sección 3: Próximos Eventos (Horizontal)
+        SportHeader(
+            title = "Próximos Eventos",
+            subtitle = "Torneos, jornadas y convocatorias"
+        )
         Spacer(Modifier.height(8.dp))
         EventsRow(homeData.events)
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(32.dp))
     }
 }
 
 @Composable
-private fun SectionTitle(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.titleLarge,
-        fontWeight = FontWeight.Bold,
-        modifier = Modifier.padding(horizontal = 16.dp)
-    )
+private fun HomeHeaderBanner() {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.primary,
+        shadowElevation = 4.dp
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 20.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column {
+                    Surface(
+                        color = MaterialTheme.colorScheme.secondary,
+                        shape = RoundedCornerShape(20.dp)
+                    ) {
+                        Text(
+                            text = "TEMPORADA 2026",
+                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Black,
+                            color = MaterialTheme.colorScheme.onSecondary
+                        )
+                    }
+                    Spacer(Modifier.height(6.dp))
+                    Text(
+                        text = "DEPORTES ULSA",
+                        style = MaterialTheme.typography.headlineLarge,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        fontWeight = FontWeight.Black
+                    )
+                }
+
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.15f),
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Default.SportsSoccer,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
 
-// ---------- SCORES (horizontal, se desliza a los lados) ----------
+// ---------- SCORES (horizontal) ----------
 
 @Composable
 private fun ScoresRow(scores: List<MatchScore>) {
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         items(scores) { match -> ScoreCard(match) }
     }
@@ -106,38 +175,87 @@ private fun ScoresRow(scores: List<MatchScore>) {
 
 @Composable
 private fun ScoreCard(match: MatchScore) {
-    Card(
-        modifier = Modifier.width(240.dp),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    SportCard(
+        modifier = Modifier.width(260.dp),
+        contentPadding = 14.dp
     ) {
-        Column(modifier = Modifier.padding(14.dp)) {
-            Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
+        // Top Header Chip
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Surface(
+                color = MaterialTheme.colorScheme.primaryContainer,
+                shape = RoundedCornerShape(8.dp)
             ) {
-                Text(match.sport, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-                Text(match.status, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
-            }
-            Spacer(Modifier.height(10.dp))
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                TeamColumn(match.homeTeam.logo, match.homeTeam.abbreviation)
                 Text(
-                    "${match.score.home} - ${match.score.away}",
-                    style = MaterialTheme.typography.headlineSmall,
+                    text = match.sport.uppercase(),
+                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer,
                     fontWeight = FontWeight.Bold
                 )
-                TeamColumn(match.awayTeam.logo, match.awayTeam.abbreviation)
             }
-            Spacer(Modifier.height(8.dp))
+
             Text(
-                formatIsoDate(match.playedAt),
+                text = match.status.uppercase(),
                 style = MaterialTheme.typography.labelSmall,
-                color = Color.Gray
+                color = if (match.status.contains("LIVE", ignoreCase = true)) Color.Red else MaterialTheme.colorScheme.onSurfaceVariant,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Spacer(Modifier.height(14.dp))
+
+        // Match Scores & Teams
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            TeamColumn(match.homeTeam.logo, match.homeTeam.abbreviation)
+
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "${match.score.home} - ${match.score.away}",
+                    style = MaterialTheme.typography.displayLarge,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Black,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = "FINAL",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            TeamColumn(match.awayTeam.logo, match.awayTeam.abbreviation)
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+
+        Spacer(Modifier.height(8.dp))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Icon(
+                imageVector = Icons.Default.CalendarMonth,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.size(14.dp)
+            )
+            Spacer(Modifier.width(4.dp))
+            Text(
+                text = formatIsoDate(match.playedAt),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
@@ -146,19 +264,34 @@ private fun ScoreCard(match: MatchScore) {
 @Composable
 private fun TeamColumn(logoUrl: String, abbreviation: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        AsyncImage(
-            model = logoUrl,
-            contentDescription = abbreviation,
+        Surface(
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.surfaceVariant,
             modifier = Modifier
-                .size(44.dp)
-                .clip(RoundedCornerShape(8.dp))
+                .size(48.dp)
+                .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.2f), CircleShape)
+        ) {
+            AsyncImage(
+                model = logoUrl,
+                contentDescription = abbreviation,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(4.dp)
+                    .clip(CircleShape),
+                contentScale = ContentScale.Fit
+            )
+        }
+        Spacer(Modifier.height(6.dp))
+        Text(
+            text = abbreviation,
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface
         )
-        Spacer(Modifier.height(4.dp))
-        Text(abbreviation, style = MaterialTheme.typography.labelSmall)
     }
 }
 
-// ---------- NOTICIAS (arriba hacia abajo, parte del scroll principal) ----------
+// ---------- NOTICIAS (vertical) ----------
 
 @Composable
 private fun NewsSectionList(news: List<NewsItem>) {
@@ -172,10 +305,9 @@ private fun NewsSectionList(news: List<NewsItem>) {
 
 @Composable
 private fun NewsCard(item: NewsItem) {
-    Card(
+    SportCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        contentPadding = 0.dp
     ) {
         Column {
             AsyncImage(
@@ -184,34 +316,52 @@ private fun NewsCard(item: NewsItem) {
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(170.dp)
+                    .height(160.dp)
             )
-            Column(Modifier.padding(14.dp)) {
-                Text(item.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Column(Modifier.padding(16.dp)) {
+                Text(
+                    text = item.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
                 Spacer(Modifier.height(6.dp))
                 Text(
-                    item.shortDescription,
+                    text = item.shortDescription,
                     style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-                Spacer(Modifier.height(8.dp))
-                Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                    Text(item.author, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
-                    Text(formatIsoDate(item.publishedAt), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                Spacer(Modifier.height(12.dp))
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = "Por ${item.author}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Text(
+                        text = formatIsoDate(item.publishedAt),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 }
             }
         }
     }
 }
 
-// ---------- EVENTOS (horizontal, similar a Scores) ----------
+// ---------- EVENTOS (horizontal) ----------
 
 @Composable
 private fun EventsRow(events: List<SportEvent>) {
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
         items(events) { event -> EventCard(event) }
     }
@@ -219,37 +369,76 @@ private fun EventsRow(events: List<SportEvent>) {
 
 @Composable
 private fun EventCard(event: SportEvent) {
-    Card(
-        modifier = Modifier.width(220.dp),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+    SportCard(
+        modifier = Modifier.width(230.dp),
+        contentPadding = 0.dp
     ) {
         Column {
-            AsyncImage(
-                model = event.image,
-                contentDescription = event.title,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(110.dp)
-            )
+            Box {
+                AsyncImage(
+                    model = event.image,
+                    contentDescription = event.title,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(110.dp)
+                )
+                Surface(
+                    color = MaterialTheme.colorScheme.primary,
+                    shape = RoundedCornerShape(bottomEnd = 8.dp),
+                    modifier = Modifier.align(Alignment.TopStart)
+                ) {
+                    Text(
+                        text = event.sport.uppercase(),
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+
             Column(Modifier.padding(12.dp)) {
-                Text(event.sport, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
-                Spacer(Modifier.height(4.dp))
                 Text(
-                    event.title,
+                    text = event.title,
                     style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Bold,
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-                Spacer(Modifier.height(6.dp))
-                Text(event.venue, style = MaterialTheme.typography.labelSmall, color = Color.Gray, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(
-                    "${formatIsoDate(event.startDate)} - ${formatIsoDate(event.endDate)}",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color.Gray
-                )
+                Spacer(Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Place,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        text = event.venue,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+                Spacer(Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.CalendarMonth,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(Modifier.width(4.dp))
+                    Text(
+                        text = "${formatIsoDate(event.startDate)} - ${formatIsoDate(event.endDate)}",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }
@@ -257,9 +446,14 @@ private fun EventCard(event: SportEvent) {
 
 // ---------- Helper ----------
 
-/** "2026-09-01T20:00:00Z" o "2026-09-01" -> "01/09/2026" (sin usar java.time, para evitar temas de minSdk/desugaring). */
 private fun formatIsoDate(iso: String): String {
-    val datePart = iso.substringBefore("T")
-    val (year, month, day) = datePart.split("-")
-    return "$day/$month/$year"
+    return try {
+        val datePart = iso.substringBefore("T")
+        val parts = datePart.split("-")
+        if (parts.size == 3) {
+            "${parts[2]}/${parts[1]}/${parts[0]}"
+        } else iso
+    } catch (e: Exception) {
+        iso
+    }
 }

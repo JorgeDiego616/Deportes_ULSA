@@ -1,6 +1,5 @@
 package com.ulsa.deportes.ui.theme
 
-import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -9,35 +8,55 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = UlsaNavyDarkTheme,
+    onPrimary = Color.Black,
+    primaryContainer = UlsaNavyContainerDark,
+    onPrimaryContainer = Color.White,
+    secondary = UlsaGold,
+    onSecondary = Color.Black,
+    tertiary = UlsaNavyLight,
+    background = UlsaBackgroundDark,
+    onBackground = UlsaTextPrimaryDark,
+    surface = UlsaSurfaceDark,
+    onSurface = UlsaTextPrimaryDark,
+    surfaceVariant = Color(0xFF2C2C2C),
+    onSurfaceVariant = UlsaTextSecondaryDark,
+    error = UlsaRed,
+    onError = Color.White
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
+    primary = UlsaNavy,
     onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    primaryContainer = UlsaNavyLight.copy(alpha = 0.15f),
+    onPrimaryContainer = UlsaNavyDark,
+    secondary = UlsaGold,
+    onSecondary = Color.Black,
+    tertiary = UlsaNavyLight,
+    background = UlsaBackgroundLight,
+    onBackground = UlsaTextPrimaryLight,
+    surface = UlsaSurfaceLight,
+    onSurface = UlsaTextPrimaryLight,
+    surfaceVariant = Color(0xFFF0F2F5),
+    onSurfaceVariant = UlsaTextSecondaryLight,
+    error = UlsaRed,
+    onError = Color.White
 )
 
+/**
+ * Tema Institucional ULSA Deportes.
+ *
+ * @param dynamicColor Se establece por defecto en `false` para preservar
+ * la identidad visual institucional ULSA en Android 12+.
+ */
 @Composable
 fun UlsaAppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
