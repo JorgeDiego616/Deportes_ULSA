@@ -116,6 +116,14 @@ fun QrScreenView(
     var showEditDialog by remember { mutableStateOf(false) }
     var showExistingQrDialog by remember { mutableStateOf(false) }
     var selectedQrForView by remember { mutableStateOf<CreateQrResponse?>(null) }
+    var editingEvent by remember { mutableStateOf<CreateQrResponse?>(null) }
+    var showForm by remember { mutableStateOf(false) }
+
+    // Text states for date/time/capacity fields to allow intermediate input
+    var dateText by remember { mutableStateOf(form.date.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"))) }
+    var startTimeText by remember { mutableStateOf(form.startTime.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))) }
+    var endTimeText by remember { mutableStateOf(form.endTime.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))) }
+    var capacityText by remember { mutableStateOf(form.capacity.toString()) }
 
     val state by viewModel.state.collectAsState()
     val capacity by viewModel.capacity.collectAsState()
@@ -124,6 +132,13 @@ fun QrScreenView(
     val hasAnyQr = existingEventList.isNotEmpty()
     val isAtMaxLimit = existingEventList.size >= 3
     val latestQr = existingEventList.lastOrNull()
+
+    // Inicializar showForm: true si no hay eventos, false si ya hay eventos
+    val showFormInitialized = remember { mutableStateOf(false) }
+    if (!showFormInitialized.value) {
+        showForm = !hasAnyQr
+        showFormInitialized.value = true
+    }
 
     // Opciones para Tipo de evento (usando enum)
     val eventCategories = EventCategory.values()
@@ -159,6 +174,7 @@ fun QrScreenView(
         if (currentState is QrUiState.Success) {
             qrCreated = true
             createdQrData = currentState.data
+            showForm = true
         }
     }
 
@@ -168,6 +184,63 @@ fun QrScreenView(
         if (currentState is QrUiState.Success) {
             qrCreated = true
             createdQrData = currentState.data
+            showForm = true
+        }
+    }
+
+    // Cargar datos del evento en el formulario cuando se edita
+    LaunchedEffect(editingEvent) {
+        editingEvent?.let { qr ->
+            val eventSummary = qr.eventSummary
+            val userSummary = qr.userSummary
+            val accessRules = qr.accessRules
+            
+            val dateFormatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")
+            val timeFormatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm")
+            val isoDateFormatter = java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
+            
+            val parsedDate = try {
+                java.time.LocalDate.parse(eventSummary.startsAt, isoDateFormatter)
+            } catch (e: Exception) {
+                java.time.LocalDate.now().plusDays(7)
+            }
+            
+            val parsedStartTime = try {
+                java.time.LocalTime.parse(accessRules.validFrom, timeFormatter)
+            } catch (e: Exception) {
+                java.time.LocalTime.of(18, 0)
+            }
+            
+            val parsedEndTime = try {
+                java.time.LocalTime.parse(accessRules.validUntil, timeFormatter)
+            } catch (e: Exception) {
+                java.time.LocalTime.of(20, 0)
+            }
+            
+            val category = EventCategory.values().find { it.name == eventSummary.category } ?: EventCategory.DEPORTIVO
+            
+            form = EventFormData(
+                organizerName = userSummary?.studentName ?: "Jorge Chaparro",
+                organizerId = userSummary?.studentId ?: "14446",
+                organizerFaculty = userSummary?.faculty ?: "Ingeniería",
+                title = eventSummary.title,
+                category = category,
+                venue = eventSummary.venue,
+                date = parsedDate,
+                startTime = parsedStartTime,
+                endTime = parsedEndTime,
+                capacity = 100,
+                eventId = qr.ticketId
+            )
+            
+            dateText = parsedDate.format(dateFormatter)
+            startTimeText = parsedStartTime.format(timeFormatter)
+            endTimeText = parsedEndTime.format(timeFormatter)
+            capacityText = "100"
+            
+            qrCreated = true
+            createdQrData = qr
+            showForm = true
         }
     }
 
@@ -177,6 +250,7 @@ fun QrScreenView(
                 title = { 
                     Text(
                         when {
+                            qrCreated && editingEvent != null -> "Editar Evento"
                             qrCreated -> "Evento Creado"
                             selectedQrForView != null -> "Ver Evento"
                             hasAnyQr -> "Tus Eventos (${existingEventList.size}/3)"
@@ -187,11 +261,18 @@ fun QrScreenView(
                 },
                 navigationIcon = {
                     IconButton(onClick = {
-                        if (qrCreated) {
+                        if (qrCreated && editingEvent != null) {
+                            editingEvent = null
                             qrCreated = false
                             createdQrData = null
+                            showForm = false
+                        } else if (qrCreated) {
+                            qrCreated = false
+                            createdQrData = null
+                            showForm = false
                         } else if (selectedQrForView != null) {
                             selectedQrForView = null
+                            showForm = false
                         } else {
                             onBack()
                         }
@@ -199,6 +280,7 @@ fun QrScreenView(
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = when {
+                                qrCreated && editingEvent != null -> "Cancelar edición"
                                 qrCreated -> "Volver al formulario"
                                 selectedQrForView != null -> "Volver a la lista"
                                 else -> "Regresar"
@@ -226,10 +308,28 @@ fun QrScreenView(
                 qrCreated && createdQrData != null -> {
                     Button(
                         onClick = {
-                            qrPreferences.saveQr(createdQrData!!)
+                            // Convertir QR creado + form a EventResponse y guardar en EventPreferences
+                            val eventResponse = com.ulsa.deportes.ui.qrSection.qrHome.model.EventResponse(
+                                eventId = form.eventId,
+                                title = form.title,
+                                category = form.category,
+                                venue = form.venue,
+                                date = form.date.format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE),
+                                startTime = form.startTime.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")),
+                                endTime = form.endTime.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")),
+                                organizerName = form.organizerName,
+                                organizerId = form.organizerId,
+                                organizerFaculty = form.organizerFaculty,
+                                capacity = form.capacity,
+                                qrToken = createdQrData!!.qr.token,
+                                createdAt = java.time.Instant.now().toString()
+                            )
+                            eventPreferences.saveEvent(eventResponse)
                             existingEventList = qrPreferences.getQrList()
                             qrCreated = false
                             createdQrData = null
+                            editingEvent = null
+                            showForm = false
                             onBack()
                         },
                         enabled = true,
@@ -249,14 +349,32 @@ fun QrScreenView(
                         ) {
                             Icon(Icons.Filled.Event, contentDescription = "Evento")
                             Spacer(Modifier.width(8.dp))
-                            Text("Guardar Evento", fontWeight = FontWeight.Bold)
+                            Text(if (editingEvent != null) "Actualizar Evento" else "Guardar Evento", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
                 hasAnyQr && !qrCreated && selectedQrForView == null -> {
                     if (!isAtMaxLimit) {
                         Button(
-                            onClick = { },
+                            onClick = {
+                                form = EventFormData(
+                                    organizerName = "Jorge Chaparro",
+                                    organizerId = "14446",
+                                    organizerFaculty = "Ingeniería",
+                                    title = "Clásico ULSA 2026",
+                                    category = EventCategory.DEPORTIVO,
+                                    venue = "Estadio La Salle",
+                                    date = java.time.LocalDate.now().plusDays(7),
+                                    startTime = java.time.LocalTime.of(18, 0),
+                                    endTime = java.time.LocalTime.of(20, 0),
+                                    capacity = 100
+                                )
+                                dateText = form.date.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                                startTimeText = form.startTime.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
+                                endTimeText = form.endTime.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
+                                capacityText = form.capacity.toString()
+                                showForm = true
+                            },
                             enabled = true,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -279,19 +397,19 @@ fun QrScreenView(
                         }
                     } else {
                         Button(
-                            onClick = {},
-                            enabled = false,
+                            onClick = { showExistingQrDialog = true },
+                            enabled = true,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp, vertical = 12.dp)
                                 .height(56.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFFE6EAF2),
-                                contentColor = Color(0xFF9FA7B3)
+                                containerColor = Color(0xFF1A73E8),
+                                contentColor = Color.White
                             ),
                             shape = MaterialTheme.shapes.medium
                         ) {
-                            Text("Límite alcanzado (3/3 Eventos)", fontWeight = FontWeight.Bold)
+                            Text("Límite alcanzado (3/3) - Eliminar uno", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -343,8 +461,8 @@ fun QrScreenView(
         },
         containerColor = Color.White
     ) { innerPadding ->
-        // Mostrar formulario solo si NO hay QR creado Y NO hay QR seleccionado Y NO hay lista
-        if (!qrCreated && selectedQrForView == null && !hasAnyQr) {
+        // Mostrar formulario cuando: no hay QR creado, no hay QR seleccionado, y se quiere mostrar formulario
+        if (!qrCreated && selectedQrForView == null && showForm) {
             // FORMULARIO
             Column(
                 modifier = Modifier
@@ -497,14 +615,25 @@ fun QrScreenView(
 
                         // Fecha del evento (campo de texto con formato dd/MM/yyyy)
                         OutlinedTextField(
-                            value = form.date.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")),
+                            value = dateText,
                             onValueChange = { newValue ->
-                                // Intentar parsear la fecha si tiene formato válido
-                                try {
-                                    val parsed = java.time.LocalDate.parse(newValue, java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-                                    form = form.copy(date = parsed)
-                                } catch (e: Exception) {
-                                    // Ignorar formato inválido temporalmente
+                                // Auto-formato: insertar '/' automáticamente
+                                val digits = newValue.filter { it.isDigit() }
+                                val formatted = buildString {
+                                    for (i in digits.indices) {
+                                        if (i == 2 || i == 4) append('/')
+                                        append(digits[i])
+                                    }
+                                }
+                                dateText = formatted.take(10) // dd/MM/yyyy = 10 chars
+                                // Intentar parsear la fecha si tiene formato válido completo
+                                if (dateText.length == 10) {
+                                    try {
+                                        val parsed = java.time.LocalDate.parse(dateText, java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                                        form = form.copy(date = parsed)
+                                    } catch (e: Exception) {
+                                        // Ignorar formato inválido temporalmente
+                                    }
                                 }
                             },
                             label = { Text("Fecha del evento (dd/MM/yyyy)") },
@@ -520,13 +649,25 @@ fun QrScreenView(
 
                         // Hora de inicio (campo de texto HH:mm)
                         OutlinedTextField(
-                            value = form.startTime.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")),
+                            value = startTimeText,
                             onValueChange = { newValue ->
-                                try {
-                                    val parsed = java.time.LocalTime.parse(newValue, java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
-                                    form = form.copy(startTime = parsed)
-                                } catch (e: Exception) {
-                                    // Ignorar formato inválido
+                                // Auto-formato: insertar ':' automáticamente
+                                val digits = newValue.filter { it.isDigit() }
+                                val formatted = buildString {
+                                    for (i in digits.indices) {
+                                        if (i == 2) append(':')
+                                        append(digits[i])
+                                    }
+                                }
+                                startTimeText = formatted.take(5) // HH:mm = 5 chars
+                                // Intentar parsear la hora si tiene formato válido completo
+                                if (startTimeText.length == 5) {
+                                    try {
+                                        val parsed = java.time.LocalTime.parse(startTimeText, java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
+                                        form = form.copy(startTime = parsed)
+                                    } catch (e: Exception) {
+                                        // Ignorar formato inválido, permitir edición intermedia
+                                    }
                                 }
                             },
                             label = { Text("Hora de inicio (HH:mm)") },
@@ -542,13 +683,25 @@ fun QrScreenView(
 
                         // Hora de fin (campo de texto HH:mm)
                         OutlinedTextField(
-                            value = form.endTime.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")),
+                            value = endTimeText,
                             onValueChange = { newValue ->
-                                try {
-                                    val parsed = java.time.LocalTime.parse(newValue, java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
-                                    form = form.copy(endTime = parsed)
-                                } catch (e: Exception) {
-                                    // Ignorar formato inválido
+                                // Auto-formato: insertar ':' automáticamente
+                                val digits = newValue.filter { it.isDigit() }
+                                val formatted = buildString {
+                                    for (i in digits.indices) {
+                                        if (i == 2) append(':')
+                                        append(digits[i])
+                                    }
+                                }
+                                endTimeText = formatted.take(5) // HH:mm = 5 chars
+                                // Intentar parsear la hora si tiene formato válido completo
+                                if (endTimeText.length == 5) {
+                                    try {
+                                        val parsed = java.time.LocalTime.parse(endTimeText, java.time.format.DateTimeFormatter.ofPattern("HH:mm"))
+                                        form = form.copy(endTime = parsed)
+                                    } catch (e: Exception) {
+                                        // Ignorar formato inválido, permitir edición intermedia
+                                    }
                                 }
                             },
                             label = { Text("Hora de fin (HH:mm)") },
@@ -564,8 +717,16 @@ fun QrScreenView(
 
                         // Capacidad
                         OutlinedTextField(
-                            value = form.capacity.toString(),
-                            onValueChange = { form = form.copy(capacity = it.toIntOrNull() ?: 100) },
+                            value = capacityText,
+                            onValueChange = { newValue ->
+                                capacityText = newValue
+                                // Solo actualizar form si el valor es un número válido > 0
+                                // Si está vacío o es 0, no actualizar (dejar el valor previo en form)
+                                val parsed = newValue.toIntOrNull()
+                                if (parsed != null && parsed > 0) {
+                                    form = form.copy(capacity = parsed)
+                                }
+                            },
                             label = { Text("Capacidad (cupos)") },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
@@ -761,6 +922,16 @@ fun QrScreenView(
                                             Text("Ver", fontWeight = FontWeight.Bold)
                                         }
                                         Button(
+                                            onClick = { editingEvent = qr },
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = Color(0xFF1A73E8),
+                                                contentColor = Color.White
+                                            ),
+                                            modifier = Modifier.padding(vertical = 4.dp)
+                                        ) {
+                                            Text("Editar", fontWeight = FontWeight.Bold)
+                                        }
+                                        Button(
                                             onClick = {
                                                 qrPreferences.removeQr(qr.ticketId)
                                                 existingEventList = qrPreferences.getQrList()
@@ -900,9 +1071,32 @@ fun QrScreenView(
                     Text("Cancelar", fontWeight = FontWeight.Bold)
                 }
             },
-            title = { Text("Límite de QRs alcanzado", fontWeight = FontWeight.Bold) },
+            title = { Text("Límite de eventos alcanzado (3/3)", fontWeight = FontWeight.Bold) },
             text = {
-                Text("Ya tienes 3 códigos QR guardados (máximo permitido). ¿Deseas eliminar todos para crear uno nuevo?")
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp), horizontalAlignment = Alignment.Start) {
+                    Text("Selecciona un evento para eliminar y poder crear uno nuevo:")
+                    existingEventList.reversed().forEachIndexed { index, qr ->
+                        val reversedIndex = existingEventList.size - index
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Evento #$reversedIndex: ${qr.eventSummary.title}")
+                            Button(
+                                onClick = {
+                                    qrPreferences.removeQr(qr.ticketId)
+                                    existingEventList = qrPreferences.getQrList()
+                                    showExistingQrDialog = false
+                                },
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)),
+                                modifier = Modifier.padding(4.dp)
+                            ) {
+                                Text("Eliminar", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
+                }
             }
         )
     }
