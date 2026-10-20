@@ -38,6 +38,9 @@ import com.ulsa.deportes.ui.homeSection.homeHome.viewmodel.HomeViewModel
 
 @Composable
 fun HomeHomeview(
+    onNavigateToMatch: (Int) -> Unit = {},
+    onNavigateToNews: (Int) -> Unit = {},
+    onNavigateToEvent: (Int) -> Unit = {},
     viewModel: HomeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -53,13 +56,23 @@ fun HomeHomeview(
             )
         }
         is HomeUiState.Success -> {
-            HomeContent(state.data)
+            HomeContent(
+                state.data,
+                onNavigateToMatch = onNavigateToMatch,
+                onNavigateToNews = onNavigateToNews,
+                onNavigateToEvent = onNavigateToEvent
+            )
         }
     }
 }
 
 @Composable
-private fun HomeContent(homeData: HomeData) {
+private fun HomeContent(
+    homeData: HomeData,
+    onNavigateToMatch: (Int) -> Unit,
+    onNavigateToNews: (Int) -> Unit,
+    onNavigateToEvent: (Int) -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -77,7 +90,7 @@ private fun HomeContent(homeData: HomeData) {
             subtitle = "Últimos marcadores de los equipos ULSA"
         )
         Spacer(Modifier.height(8.dp))
-        ScoresRow(homeData.scores)
+        ScoresRow(homeData.scores, onClick = onNavigateToMatch)
 
         Spacer(Modifier.height(24.dp))
 
@@ -87,7 +100,7 @@ private fun HomeContent(homeData: HomeData) {
             subtitle = "Mantente al día con el deporte universitario"
         )
         Spacer(Modifier.height(8.dp))
-        NewsSectionList(homeData.news)
+        NewsSectionList(homeData.news, onClick = onNavigateToNews)
 
         Spacer(Modifier.height(24.dp))
 
@@ -97,7 +110,7 @@ private fun HomeContent(homeData: HomeData) {
             subtitle = "Torneos, jornadas y convocatorias"
         )
         Spacer(Modifier.height(8.dp))
-        EventsRow(homeData.events)
+        EventsRow(homeData.events, onClick = onNavigateToEvent)
 
         Spacer(Modifier.height(32.dp))
     }
@@ -164,19 +177,20 @@ private fun HomeHeaderBanner() {
 // ---------- SCORES (horizontal) ----------
 
 @Composable
-private fun ScoresRow(scores: List<MatchScore>) {
+private fun ScoresRow(scores: List<MatchScore>, onClick: (Int) -> Unit) {
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        items(scores) { match -> ScoreCard(match) }
+        items(scores) { match -> ScoreCard(match, onClick = { onClick(match.id) }) }
     }
 }
 
 @Composable
-private fun ScoreCard(match: MatchScore) {
+private fun ScoreCard(match: MatchScore, onClick: () -> Unit) {
     SportCard(
         modifier = Modifier.width(260.dp),
+        onClick = onClick,
         contentPadding = 14.dp
     ) {
         // Top Header Chip
@@ -294,24 +308,31 @@ private fun TeamColumn(logoUrl: String, abbreviation: String) {
 // ---------- NOTICIAS (vertical) ----------
 
 @Composable
-private fun NewsSectionList(news: List<NewsItem>) {
+private fun NewsSectionList(news: List<NewsItem>, onClick: (Int) -> Unit) {
     Column(
         modifier = Modifier.padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        news.forEach { item -> NewsCard(item) }
+        news.forEach { item -> NewsCard(item, onClick = { onClick(item.id) }) }
     }
 }
 
 @Composable
-private fun NewsCard(item: NewsItem) {
+private fun NewsCard(item: NewsItem, onClick: () -> Unit) {
     SportCard(
         modifier = Modifier.fillMaxWidth(),
+        onClick = onClick,
         contentPadding = 0.dp
     ) {
         Column {
             AsyncImage(
-                model = item.image,
+                model = coil.request.ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
+                    .data(item.image.takeIf { !it.isNullOrBlank() })
+                    .crossfade(true)
+                    .error(com.ulsa.deportes.ui.newsSection.newsHome.util.getNewsPlaceholderRes(item.title, item.shortDescription))
+                    .fallback(com.ulsa.deportes.ui.newsSection.newsHome.util.getNewsPlaceholderRes(item.title, item.shortDescription))
+                    .placeholder(com.ulsa.deportes.ui.newsSection.newsHome.util.getNewsPlaceholderRes(item.title, item.shortDescription))
+                    .build(),
                 contentDescription = item.title,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -358,19 +379,20 @@ private fun NewsCard(item: NewsItem) {
 // ---------- EVENTOS (horizontal) ----------
 
 @Composable
-private fun EventsRow(events: List<SportEvent>) {
+private fun EventsRow(events: List<SportEvent>, onClick: (Int) -> Unit) {
     LazyRow(
         contentPadding = PaddingValues(horizontal = 16.dp),
         horizontalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        items(events) { event -> EventCard(event) }
+        items(events) { event -> EventCard(event, onClick = { onClick(event.id) }) }
     }
 }
 
 @Composable
-private fun EventCard(event: SportEvent) {
+private fun EventCard(event: SportEvent, onClick: () -> Unit) {
     SportCard(
         modifier = Modifier.width(230.dp),
+        onClick = onClick,
         contentPadding = 0.dp
     ) {
         Column {
@@ -453,7 +475,7 @@ private fun formatIsoDate(iso: String): String {
         if (parts.size == 3) {
             "${parts[2]}/${parts[1]}/${parts[0]}"
         } else iso
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         iso
     }
 }

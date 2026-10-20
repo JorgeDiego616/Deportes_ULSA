@@ -38,6 +38,7 @@ import com.ulsa.deportes.ui.matchesSection.matchesHome.viewmodel.MatchesViewMode
 
 @Composable
 fun matchesHomeView(
+    onNavigateToMatch: (Int) -> Unit = {},
     viewModel: MatchesViewModel = viewModel(
         factory = MatchesViewModel.Factory(SportsRepositoryImpl(HomeRetrofitClient.service))
     )
@@ -84,9 +85,7 @@ fun matchesHomeView(
             )
 
             when (val state = uiState) {
-                is MatchesUiState.Loading -> {
-                    // Mostrar filtros vacíos o deshabilitados mientras carga
-                }
+                is MatchesUiState.Loading -> {}
                 is MatchesUiState.Success -> {
                     // Chips de Deporte
                     val sports = state.availableSports
@@ -239,7 +238,7 @@ fun matchesHomeView(
                             verticalArrangement = Arrangement.spacedBy(14.dp)
                         ) {
                             items(filteredMatches) { match ->
-                                MatchCardItem(match = match, viewModel = viewModel)
+                                MatchCardItem(match = match, viewModel = viewModel, onClick = { onNavigateToMatch(match.id) })
                             }
                         }
                     }
@@ -250,7 +249,7 @@ fun matchesHomeView(
 }
 
 @Composable
-private fun MatchCardItem(match: MatchScore, viewModel: MatchesViewModel) {
+private fun MatchCardItem(match: MatchScore, viewModel: MatchesViewModel, onClick: () -> Unit) {
     val statusFilter = viewModel.determineMatchStatus(match)
     val statusText = when (statusFilter) {
         MatchStatusFilter.LIVE -> "EN VIVO"
@@ -267,6 +266,7 @@ private fun MatchCardItem(match: MatchScore, viewModel: MatchesViewModel) {
 
     SportCard(
         modifier = Modifier.fillMaxWidth(),
+        onClick = onClick,
         contentPadding = 14.dp
     ) {
         // Cabecera de tarjeta

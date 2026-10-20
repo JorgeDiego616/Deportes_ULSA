@@ -1,6 +1,7 @@
 package com.ulsa.deportes.ui.navigation
 
 import android.app.Application
+import android.net.Uri
 import com.ulsa.deportes.ui.teamsSection.APIRequest.view.ApiRequestView
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -45,9 +46,9 @@ import com.ulsa.deportes.ui.auth.viewmodel.LogoutViewModel
 import com.ulsa.deportes.ui.onboarding.data.OnboardingPreferences
 import com.ulsa.deportes.ui.onboarding.view.OnboardingScreenView
 import com.ulsa.deportes.ui.onboarding.viewmodel.OnboardingViewModel
-import com.ulsa.deportes.ui.qrSection.qrHome.model.EventResponse
 import com.ulsa.deportes.ui.qrSection.qrHome.view.QrScreenView
 import com.ulsa.deportes.ui.qrSection.qrHome.view.RegistrationScreenView
+import com.ulsa.deportes.ui.details.view.*
 
 /** Ruta interna (no es tab) para la pantalla de creación de QR. */
 private const val QR_ROUTE = "qr_screen"
@@ -91,7 +92,6 @@ fun AppNavigation() {
         val appPrefs = AppPreferences(context)
         val onboardingPrefs = OnboardingPreferences(appPrefs)
         if (onboardingPrefs.isOnboardingCompleted()) {
-            // TODO: Set to false to re-enable login flow
             val skipLoginForTesting = true
             if (skipLoginForTesting) "tabs" else AppRoute.Login.route
         } else {
@@ -191,13 +191,26 @@ private fun TabsScaffold(
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(AppRoute.TeamsSection.route) {
-                teamsHomeView(onNavigateToFirstApi = onNavigateToFirstApi)
+                teamsHomeView(
+                    onNavigateToTeam = { teamName ->
+                        navController.navigate("team_detail/${Uri.encode(teamName)}")
+                    },
+                    onNavigateToFirstApi = onNavigateToFirstApi
+                )
             }
             composable(AppRoute.HomeHome.route) {
-                HomeHomeview()
+                HomeHomeview(
+                    onNavigateToMatch = { matchId -> navController.navigate("match_detail/$matchId") },
+                    onNavigateToNews = { newsId -> navController.navigate("news_detail/$newsId") },
+                    onNavigateToEvent = { eventId -> navController.navigate("event_detail/$eventId") }
+                )
             }
             composable(AppRoute.NewsSection.route) { NewsHomeView() }
-            composable(AppRoute.MatchesSection.route) { matchesHomeView() }
+            composable(AppRoute.MatchesSection.route) {
+                matchesHomeView(
+                    onNavigateToMatch = { matchId -> navController.navigate("match_detail/$matchId") }
+                )
+            }
             composable(AppRoute.ProfileSection.route) {
                 profileHomeView(
                     onLogout = onLogout,
@@ -221,13 +234,38 @@ private fun TabsScaffold(
                 if (event != null) {
                     RegistrationScreenView(event = event, onBack = { navController.popBackStack() })
                 } else {
-                    // Fallback: volver al perfil
                     androidx.compose.material3.Text(
                         text = "Evento no encontrado",
                         modifier = Modifier.fillMaxSize().padding(16.dp),
                         style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
                     )
                 }
+            }
+
+            // F06: Detalle de Partido, Noticia, Evento y Equipo
+            composable(
+                route = "match_detail/{id}",
+                arguments = listOf(navArgument("id") { type = NavType.IntType })
+            ) {
+                MatchDetailView(onBack = { navController.popBackStack() })
+            }
+            composable(
+                route = "news_detail/{id}",
+                arguments = listOf(navArgument("id") { type = NavType.IntType })
+            ) {
+                NewsDetailView(onBack = { navController.popBackStack() })
+            }
+            composable(
+                route = "event_detail/{id}",
+                arguments = listOf(navArgument("id") { type = NavType.IntType })
+            ) {
+                EventDetailView(onBack = { navController.popBackStack() })
+            }
+            composable(
+                route = "team_detail/{name}",
+                arguments = listOf(navArgument("name") { type = NavType.StringType })
+            ) {
+                TeamDetailView(onBack = { navController.popBackStack() })
             }
         }
     }

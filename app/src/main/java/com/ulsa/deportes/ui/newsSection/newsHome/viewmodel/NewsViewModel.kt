@@ -1,40 +1,54 @@
 package com.ulsa.deportes.ui.newsSection.newsHome.viewmodel
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.ulsa.deportes.ui.newsSection.newsHome.model.NewsItem
-import com.ulsa.deportes.ui.newsSection.newsHome.network.NewsApiService
+import com.ulsa.deportes.domain.repository.SportsRepository
+import com.ulsa.deportes.ui.homeSection.homeHome.model.NewsItem
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 
-class NewsViewModel : ViewModel() {
-    var newsList by mutableStateOf<List<NewsItem>>(emptyList())
-    var isLoading by mutableStateOf(false)
-    var errorMessage by mutableStateOf<String?>(null)
+class NewsViewModel(
+    private val repository: SportsRepository
+) : ViewModel() {
 
-    private val retrofit = Retrofit.Builder() //retrofit libreria para hacer peticiones a apis
-        .baseUrl("https://gist.githubusercontent.com/")
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
-//se hace el fetch de las noticias y carga datos
-    private val apiService = retrofit.create(NewsApiService::class.java)
+    private val _newsList = MutableStateFlow<List<NewsItem>>(emptyList())
+    val newsList: StateFlow<List<NewsItem>> = _newsList.asStateFlow()
 
-    fun fetchNews(gistRawUrl: String) {
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val _errorMessage = MutableStateFlow<String?>(null)
+    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+
+    init {
+        fetchNews()
+    }
+
+    fun fetchNews() {
         viewModelScope.launch {
-            isLoading = true
-            errorMessage = null
+            _isLoading.value = true
+            _errorMessage.value = null
             try {
-                // Usamos la URL completa del Gist Raw
-                newsList = apiService.getNews(gistRawUrl)
+                val data = repository.getHomeData()
+                _newsList.value = data.news
             } catch (e: Exception) {
-                errorMessage = "Error al cargar noticias: ${e.message}"
+                _errorMessage.value = "Error al cargar noticias: ${e.message}"
             } finally {
-                isLoading = false
+                _isLoading.value = false
             }
+        }
+    }
+
+    class Factory(private val repository: SportsRepository) : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            if (modelClass.isAssignableFrom(NewsViewModel::class.java)) {
+                return NewsViewModel(repository) as T
+            }
+            throw IllegalArgumentException("Unknown ViewModel class")
         }
     }
 }

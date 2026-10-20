@@ -3,6 +3,7 @@ package com.ulsa.deportes.ui.qrSection.qrHome.view
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -609,25 +610,32 @@ fun QrScreenView(
                         // Dropdown Tipo de evento (enum)
                         ExposedDropdownMenuBox(
                             expanded = categoryExpanded,
-                            onExpandedChange = { categoryExpanded = !categoryExpanded },
+                            onExpandedChange = { categoryExpanded = it },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            OutlinedTextField(
-                                value = form.category?.name ?: "",
-                                onValueChange = {},
-                                readOnly = true,
-                                label = { Text("Tipo de evento") },
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded) },
+                            Box(
                                 modifier = Modifier
-                                    .menuAnchor()
-                                    .fillMaxWidth(),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFF1A73E8),
-                                    unfocusedBorderColor = Color(0xFFE6EAF2),
-                                    focusedLabelColor = Color(0xFF1A73E8),
-                                    cursorColor = Color(0xFF1A73E8)
+                                    .fillMaxWidth()
+                                    .clickable { categoryExpanded = !categoryExpanded }
+                            ) {
+                                OutlinedTextField(
+                                    value = form.category?.name ?: "",
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    enabled = false,
+                                    label = { Text("Tipo de evento") },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded) },
+                                    modifier = Modifier
+                                        .menuAnchor()
+                                        .fillMaxWidth(),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        disabledBorderColor = Color(0xFF1A73E8),
+                                        disabledLabelColor = Color(0xFF1A73E8),
+                                        disabledTextColor = Color(0xFF1A1A1A),
+                                        disabledTrailingIconColor = Color(0xFF1A73E8)
+                                    )
                                 )
-                            )
+                            }
                             ExposedDropdownMenu(
                                 expanded = categoryExpanded,
                                 onDismissRequest = { categoryExpanded = false }
@@ -647,25 +655,32 @@ fun QrScreenView(
                         // Dropdown Sedes
                         ExposedDropdownMenuBox(
                             expanded = venueExpanded,
-                            onExpandedChange = { venueExpanded = !venueExpanded },
+                            onExpandedChange = { venueExpanded = it },
                             modifier = Modifier.fillMaxWidth()
                         ) {
-                            OutlinedTextField(
-                                value = form.venue,
-                                onValueChange = {},
-                                readOnly = true,
-                                label = { Text("Sede") },
-                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = venueExpanded) },
+                            Box(
                                 modifier = Modifier
-                                    .menuAnchor()
-                                    .fillMaxWidth(),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    focusedBorderColor = Color(0xFF1A73E8),
-                                    unfocusedBorderColor = Color(0xFFE6EAF2),
-                                    focusedLabelColor = Color(0xFF1A73E8),
-                                    cursorColor = Color(0xFF1A73E8)
+                                    .fillMaxWidth()
+                                    .clickable { venueExpanded = !venueExpanded }
+                            ) {
+                                OutlinedTextField(
+                                    value = form.venue,
+                                    onValueChange = {},
+                                    readOnly = true,
+                                    enabled = false,
+                                    label = { Text("Sede") },
+                                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = venueExpanded) },
+                                    modifier = Modifier
+                                        .menuAnchor()
+                                        .fillMaxWidth(),
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        disabledBorderColor = Color(0xFF1A73E8),
+                                        disabledLabelColor = Color(0xFF1A73E8),
+                                        disabledTextColor = Color(0xFF1A1A1A),
+                                        disabledTrailingIconColor = Color(0xFF1A73E8)
+                                    )
                                 )
-                            )
+                            }
                             ExposedDropdownMenu(
                                 expanded = venueExpanded,
                                 onDismissRequest = { venueExpanded = false }

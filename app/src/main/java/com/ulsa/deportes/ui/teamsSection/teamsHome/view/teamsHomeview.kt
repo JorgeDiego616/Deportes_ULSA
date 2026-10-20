@@ -12,6 +12,7 @@ import com.ulsa.deportes.ui.teamsSection.teamsHome.viewmodel.teamsHomeviewmodel
 
 @Composable
 fun teamsHomeView(
+    onNavigateToTeam: (String) -> Unit = {},
     @Suppress("UNUSED_PARAMETER") onNavigateToFirstApi: () -> Unit = {},
     @Suppress("UNUSED_PARAMETER") homeViewModel: teamsHomeviewmodel = viewModel()
 ) {
@@ -20,6 +21,8 @@ fun teamsHomeView(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        TeamsListContent()
+        TeamsListContent(
+            onTeamClick = { team -> onNavigateToTeam(team.teamName) }
+        )
     }
 }

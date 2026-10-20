@@ -1,0 +1,18 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="120dp"
+    android:viewportWidth="200"
+    android:viewportHeight="120">
+    <!-- Navy Blue Background -->
+    <path
+        android:fillColor="#0D47A1"
+        android:pathData="M0,0h200v120H0z"/>
+    <!-- Gold / Accent stripe -->
+    <path
+        android:fillColor="#1565C0"
+        android:pathData="M0,60l200,-60v120z"/>
+    <!-- Trophy Icon -->
+    <path
+        android:fillColor="#FFB300"
+        android:pathData="M90,35h20v25c0,6 -5,11 -10,11c-5,0 -10,-5 -10,-11z M85,30h30v5h-30z M95,71h10v12h-10z M90,83h20v5h-20z"/>
+</vector>

@@ -92,6 +92,7 @@ fun ApiRequestView(
 
 @Composable
 fun TeamsListContent(
+    onTeamClick: (Team) -> Unit = {},
     viewModel: APIRequestViewModel = viewModel()
 ) {
     val students by viewModel.students.collectAsState()
@@ -113,18 +114,19 @@ fun TeamsListContent(
                 )
             }
             items(students) { team ->
-                TeamCard(team = team)
+                TeamCard(team = team, onClick = { onTeamClick(team) })
             }
         }
     }
 }
 
 @Composable
-fun TeamCard(team: Team) {
+fun TeamCard(team: Team, onClick: () -> Unit = {}) {
     SportCard(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
+        onClick = onClick,
         contentPadding = 16.dp
     ) {
         Row(
