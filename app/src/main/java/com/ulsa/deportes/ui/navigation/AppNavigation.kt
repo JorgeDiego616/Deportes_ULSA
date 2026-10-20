@@ -2,6 +2,7 @@ package com.ulsa.deportes.ui.navigation
 
 import android.app.Application
 import com.ulsa.deportes.ui.teamsSection.APIRequest.view.ApiRequestView
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Api
@@ -23,12 +24,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.ulsa.deportes.common.preferences.AppPreferences
 
 import com.ulsa.deportes.ui.homeSection.homeHome.view.HomeHomeview
@@ -41,6 +45,14 @@ import com.ulsa.deportes.ui.auth.viewmodel.LogoutViewModel
 import com.ulsa.deportes.ui.onboarding.data.OnboardingPreferences
 import com.ulsa.deportes.ui.onboarding.view.OnboardingScreenView
 import com.ulsa.deportes.ui.onboarding.viewmodel.OnboardingViewModel
+import com.ulsa.deportes.ui.qrSection.qrHome.model.EventResponse
+import com.ulsa.deportes.ui.qrSection.qrHome.view.QrScreenView
+import com.ulsa.deportes.ui.qrSection.qrHome.view.RegistrationScreenView
+
+/** Ruta interna (no es tab) para la pantalla de creación de QR. */
+private const val QR_ROUTE = "qr_screen"
+/** Ruta interna para la pantalla de registro a eventos. */
+private const val REGISTRATION_ROUTE = "registration_screen/{eventId}"
 
 /**
  * Sealed class defining all bottom-tab routes with their metadata.
@@ -79,7 +91,9 @@ fun AppNavigation() {
         val appPrefs = AppPreferences(context)
         val onboardingPrefs = OnboardingPreferences(appPrefs)
         if (onboardingPrefs.isOnboardingCompleted()) {
-            AppRoute.Login.route
+            // TODO: Set to false to re-enable login flow
+            val skipLoginForTesting = true
+            if (skipLoginForTesting) "tabs" else AppRoute.Login.route
         } else {
             AppRoute.Onboarding.route
         }
@@ -185,7 +199,35 @@ private fun TabsScaffold(
             composable(AppRoute.NewsSection.route) { NewsHomeView() }
             composable(AppRoute.MatchesSection.route) { matchesHomeView() }
             composable(AppRoute.ProfileSection.route) {
-                profileHomeView(onLogout = onLogout)
+                profileHomeView(
+                    onLogout = onLogout,
+                    onNavigateToQr = { navController.navigate(QR_ROUTE) },
+                    onRegisterToEvent = { event ->
+                        navController.navigate("registration_screen/${event.eventId}")
+                    }
+                )
+            }
+            composable(QR_ROUTE) {
+                QrScreenView(onBack = { navController.popBackStack() })
+            }
+            composable(
+                route = REGISTRATION_ROUTE,
+                arguments = listOf(navArgument("eventId") { type = NavType.StringType })
+            ) { backStackEntry ->
+                val eventId = backStackEntry.arguments?.getString("eventId") ?: return@composable
+                val context = LocalContext.current
+                val eventPreferences = remember { com.ulsa.deportes.ui.qrSection.qrHome.data.EventPreferences(context) }
+                val event = eventPreferences.getEventList().find { it.eventId == eventId }
+                if (event != null) {
+                    RegistrationScreenView(event = event, onBack = { navController.popBackStack() })
+                } else {
+                    // Fallback: volver al perfil
+                    androidx.compose.material3.Text(
+                        text = "Evento no encontrado",
+                        modifier = Modifier.fillMaxSize().padding(16.dp),
+                        style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
+                    )
+                }
             }
         }
     }
