@@ -106,25 +106,31 @@ fun RegistrationScreenView(
         attendeeName.isNotBlank() && attendeeEmail.isNotBlank() && attendeeEmail.contains("@")
     }
 
-    // Observar éxito en el registro
+    // Observar éxito o error en el registro
     LaunchedEffect(state) {
-        val currentState = state
-        if (currentState is QrUiState.Success) {
-            isRegistering = false
-            registrationSuccess = true
-            // Convertir CreateQrResponse del mock a RegistrationResponse
-            val qrData = currentState.data
-            createdRegistration = RegistrationResponse(
-                registrationId = java.util.UUID.randomUUID().toString(),
-                eventId = event.eventId,
-                attendeeName = attendeeName,
-                attendeeEmail = attendeeEmail,
-                qrToken = qrData.qr.token,
-                ticketStatus = TicketStatus.ACTIVE,
-                registeredAt = java.time.Instant.now().toString()
-            )
-            registrationPreferences.saveRegistration(createdRegistration!!)
-            showSuccessDialog = true
+        when (val currentState = state) {
+            is QrUiState.Success -> {
+                isRegistering = false
+                registrationSuccess = true
+                // Convertir CreateQrResponse del mock a RegistrationResponse
+                val qrData = currentState.data
+                createdRegistration = RegistrationResponse(
+                    registrationId = java.util.UUID.randomUUID().toString(),
+                    eventId = event.eventId,
+                    attendeeName = attendeeName,
+                    attendeeEmail = attendeeEmail,
+                    qrToken = qrData.qr.token,
+                    ticketStatus = TicketStatus.ACTIVE,
+                    registeredAt = java.time.Instant.now().toString()
+                )
+                registrationPreferences.saveRegistration(createdRegistration!!)
+                showSuccessDialog = true
+            }
+            is QrUiState.Error -> {
+                isRegistering = false
+                android.widget.Toast.makeText(context, currentState.message, android.widget.Toast.LENGTH_LONG).show()
+            }
+            else -> {}
         }
     }
 
