@@ -1,0 +1,31 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="120dp"
+    android:viewportWidth="200"
+    android:viewportHeight="120">
+    <!-- Court Orange Background -->
+    <path
+        android:fillColor="#E65100"
+        android:pathData="M0,0h200v120H0z"/>
+    <!-- Court Wood grain accent -->
+    <path
+        android:fillColor="#EF6C00"
+        android:pathData="M0,0h200v40H0z"/>
+    <!-- Three point arc -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:fillColor="#00000000"
+        android:pathData="M100,120c35,-40 35,-80 0,-120"/>
+    <!-- Hoop / Rim representation -->
+    <path
+        android:strokeColor="#FFD54F"
+        android:strokeWidth="3"
+        android:fillColor="#00000000"
+        android:pathData="M90,60h20v6h-20z"/>
+    <!-- Basketball lines -->
+    <path
+        android:strokeColor="#BF360C"
+        android:strokeWidth="2"
+        android:pathData="M100,10v100 M50,60h100"/>
+</vector>

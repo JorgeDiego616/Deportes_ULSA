@@ -1,0 +1,23 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="120dp"
+    android:viewportWidth="200"
+    android:viewportHeight="120">
+    <!-- Field Red/Brown Background -->
+    <path
+        android:fillColor="#B71C1C"
+        android:pathData="M0,0h200v120H0z"/>
+    <!-- Infield Diamond -->
+    <path
+        android:fillColor="#D32F2F"
+        android:pathData="M100,20l50,50l-50,50l-50,-50z"/>
+    <!-- Base plate -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M100,100l6,-6h-12z"/>
+    <!-- Crossed bats representation -->
+    <path
+        android:strokeColor="#FFE082"
+        android:strokeWidth="4"
+        android:pathData="M60,30l80,60 M140,30l-80,60"/>
+</vector>

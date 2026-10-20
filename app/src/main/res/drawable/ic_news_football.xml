@@ -1,0 +1,36 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="120dp"
+    android:viewportWidth="200"
+    android:viewportHeight="120">
+    <!-- Pitch Green Background -->
+    <path
+        android:fillColor="#1B5E20"
+        android:pathData="M0,0h200v120H0z"/>
+    <!-- Pitch stripe 1 -->
+    <path
+        android:fillColor="#2E7D32"
+        android:pathData="M0,0h50v120H0z"/>
+    <!-- Pitch stripe 2 -->
+    <path
+        android:fillColor="#2E7D32"
+        android:pathData="M100,0h50v120H100z"/>
+    <!-- Center Circle -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:fillColor="#00000000"
+        android:pathData="M100,60m-20,0a20,20 0,1 1,40 0a20,20 0,1 1,-40 0"/>
+    <!-- Center Line -->
+    <path
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="2"
+        android:pathData="M100,0v120"/>
+    <!-- Soccer ball icon representation -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M100,50l10,7l-4,12h-12l-4,-12z"/>
+    <path
+        android:fillColor="#E0E0E0"
+        android:pathData="M100,50l-10,7l3,8h14l3,-8z"/>
+</vector>

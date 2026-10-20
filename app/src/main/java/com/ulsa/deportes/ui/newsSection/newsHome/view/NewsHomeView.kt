@@ -6,25 +6,34 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import com.ulsa.deportes.data.repository.SportsRepositoryImpl
+import com.ulsa.deportes.ui.components.SportCard
+import com.ulsa.deportes.ui.homeSection.homeHome.network.HomeRetrofitClient
 import com.ulsa.deportes.ui.newsSection.newsHome.viewmodel.NewsViewModel
-//el que pone formato a las noticias
+
 @Composable
-fun NewsHomeView(viewModel: NewsViewModel = viewModel()) {
-    val MI_GIST_URL = "https://gist.githubusercontent.com/Rodrigolega/410e6141fb16acee8cd1e71ae6cbf5f8/raw/74308cef8da78c935605bedad5fc7130c5c92aa2/noticias.json"
-//LaunchedEffect(Unit) asegura que la descarga se dispare solo una vez cuando la pantalla se muestra por primera vez
-    // Disparar la carga de datos al abrir la pantalla
+fun NewsHomeView(
+    onNavigateToNews: (Int) -> Unit = {},
+    viewModel: NewsViewModel = viewModel(
+        factory = NewsViewModel.Factory(SportsRepositoryImpl(HomeRetrofitClient.service))
+    )
+) {
+    val newsList by viewModel.newsList.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val errorMessage by viewModel.errorMessage.collectAsState()
+
     LaunchedEffect(Unit) {
-        if (MI_GIST_URL.contains("usuario")) {
-            // Aún no ha puesto su URL real
-        } else {
-            viewModel.fetchNews(MI_GIST_URL)
-        }
+        viewModel.fetchNews()
     }
 
     Column(
@@ -42,31 +51,16 @@ fun NewsHomeView(viewModel: NewsViewModel = viewModel()) {
         Spacer(modifier = Modifier.height(16.dp))
 
         when {
-            viewModel.isLoading -> {
+            isLoading -> {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             }
-            viewModel.errorMessage != null -> {
+            errorMessage != null -> {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = viewModel.errorMessage!!, color = MaterialTheme.colorScheme.error)
-                    Button(onClick = { viewModel.fetchNews(MI_GIST_URL) }) {
+                    Text(text = errorMessage!!, color = MaterialTheme.colorScheme.error)
+                    Button(onClick = { viewModel.fetchNews() }) {
                         Text("Reintentar")
-                    }
-                }
-            }
-            MI_GIST_URL.contains("usuario") -> {
-                // Mensaje instructivo para el alumno
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text("¡Configuración pendiente!", fontWeight = FontWeight.Bold)
-                        Text("Para ver tus noticias reales:")
-                        Text("1. Crea tu Gist en GitHub con el JSON.")
-                        Text("2. Dale click al botón 'Raw'.")
-                        Text("3. Pega el link en NewsHomeView.kt.")
                     }
                 }
             }
@@ -74,32 +68,75 @@ fun NewsHomeView(viewModel: NewsViewModel = viewModel()) {
                 LazyColumn(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(viewModel.newsList) { noticia ->
-                        Card(
+                    items(newsList) { noticia ->
+                        SportCard(
                             modifier = Modifier.fillMaxWidth(),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                            onClick = { onNavigateToNews(noticia.id) },
+                            contentPadding = 0.dp
                         ) {
-                            Column(modifier = Modifier.padding(16.dp)) {
-                                Text(
-                                    text = noticia.titulo,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
+                            Column {
+                                AsyncImage(
+                                    model = coil.request.ImageRequest.Builder(androidx.compose.ui.platform.LocalContext.current)
+                                        .data(noticia.image.takeIf { !it.isNullOrBlank() })
+                                        .crossfade(true)
+                                        .error(com.ulsa.deportes.ui.newsSection.newsHome.util.getNewsPlaceholderRes(noticia.title, noticia.shortDescription))
+                                        .fallback(com.ulsa.deportes.ui.newsSection.newsHome.util.getNewsPlaceholderRes(noticia.title, noticia.shortDescription))
+                                        .placeholder(com.ulsa.deportes.ui.newsSection.newsHome.util.getNewsPlaceholderRes(noticia.title, noticia.shortDescription))
+                                        .build(),
+                                    contentDescription = noticia.title,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(170.dp)
                                 )
-                                Text(
-                                    text = noticia.fecha,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.secondary
-                                )
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(
-                                    text = noticia.descripcion,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
+                                Column(Modifier.padding(14.dp)) {
+                                    Text(
+                                        text = noticia.title,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Spacer(Modifier.height(6.dp))
+                                    Text(
+                                        text = noticia.shortDescription,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
+                                    Spacer(Modifier.height(8.dp))
+                                    Row(
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text(
+                                            noticia.author,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.primary,
+                                            fontWeight = FontWeight.SemiBold
+                                        )
+                                        Text(
+                                            formatIsoDate(noticia.publishedAt),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
         }
+    }
+}
+
+private fun formatIsoDate(iso: String): String {
+    return try {
+        val datePart = iso.substringBefore("T")
+        val parts = datePart.split("-")
+        if (parts.size == 3) {
+            "${parts[2]}/${parts[1]}/${parts[0]}"
+        } else iso
+    } catch (_: Exception) {
+        iso
     }
 }
