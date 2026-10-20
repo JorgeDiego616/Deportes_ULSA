@@ -6,6 +6,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -100,9 +101,9 @@ fun QrScreenView(
     // Cargar lista de eventos existentes al inicio
     var existingEventList by remember { mutableStateOf<List<CreateQrResponse>>(qrPreferences.getQrList()) }
     var form by remember { mutableStateOf(EventFormData(
-        organizerName = "Jorge Chaparro",
-        organizerId = "14446",
-        organizerFaculty = "Ingeniería",
+        organizerName = eventPreferences.getOrganizerName(),
+        organizerId = eventPreferences.getOrganizerId(),
+        organizerFaculty = eventPreferences.getOrganizerFaculty(),
         title = "Clásico ULSA 2026",
         category = EventCategory.DEPORTIVO,
         venue = "Estadio La Salle",
@@ -117,6 +118,7 @@ fun QrScreenView(
     var showExistingQrDialog by remember { mutableStateOf(false) }
     var selectedQrForView by remember { mutableStateOf<CreateQrResponse?>(null) }
     var editingEvent by remember { mutableStateOf<CreateQrResponse?>(null) }
+    var itemToDelete by remember { mutableStateOf<CreateQrResponse?>(null) }
     var showForm by remember { mutableStateOf(false) }
 
     // Text states for date/time/capacity fields to allow intermediate input
@@ -168,23 +170,52 @@ fun QrScreenView(
         form.capacity > 0
     }
 
-    // Observar éxito en la creación del evento
+    // Observar éxito en la generación o actualización del QR/evento
     LaunchedEffect(state) {
         val currentState = state
         if (currentState is QrUiState.Success) {
-            qrCreated = true
-            createdQrData = currentState.data
-            showForm = true
-        }
-    }
+            if (editingEvent != null) {
+                val targetId = editingEvent!!.ticketId
+                val eventsBefore = eventPreferences.getEventList()
+                val qrsBefore = qrPreferences.getQrList()
 
-    // Observar éxito en la creación del QR
-    LaunchedEffect(state) {
-        val currentState = state
-        if (currentState is QrUiState.Success) {
-            qrCreated = true
-            createdQrData = currentState.data
-            showForm = true
+                val eventResponse = com.ulsa.deportes.ui.qrSection.qrHome.model.EventResponse(
+                    eventId = targetId,
+                    title = form.title,
+                    category = form.category,
+                    venue = form.venue,
+                    date = form.date.format(java.time.format.DateTimeFormatter.ISO_LOCAL_DATE),
+                    startTime = form.startTime.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")),
+                    endTime = form.endTime.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm")),
+                    organizerName = form.organizerName,
+                    organizerId = form.organizerId,
+                    organizerFaculty = form.organizerFaculty,
+                    capacity = form.capacity,
+                    qrToken = currentState.data.qr.token,
+                    createdAt = java.time.Instant.now().toString()
+                )
+
+                eventPreferences.saveOrganizerDefaults(form.organizerName, form.organizerId, form.organizerFaculty)
+                val savedEvent = eventPreferences.saveEvent(eventResponse)
+                val savedQr = qrPreferences.saveQr(currentState.data)
+
+                if (savedEvent && savedQr) {
+                    existingEventList = qrPreferences.getQrList()
+                    editingEvent = null
+                    qrCreated = false
+                    createdQrData = null
+                    showForm = false
+                    onBack()
+                } else {
+                    eventPreferences.restoreList(eventsBefore)
+                    qrPreferences.restoreList(qrsBefore)
+                    android.widget.Toast.makeText(context, "Error al actualizar el evento.", android.widget.Toast.LENGTH_LONG).show()
+                }
+            } else {
+                qrCreated = true
+                createdQrData = currentState.data
+                showForm = true
+            }
         }
     }
 
@@ -308,9 +339,23 @@ fun QrScreenView(
                 qrCreated && createdQrData != null -> {
                     Button(
                         onClick = {
-                            // Convertir QR creado + form a EventResponse y guardar en EventPreferences
+                            val targetId = createdQrData!!.ticketId
+                            // Verificar si se puede guardar en ambas persistencias antes de proceder
+                            if (!eventPreferences.canSave(targetId) || !qrPreferences.canSave(targetId)) {
+                                android.widget.Toast.makeText(
+                                    context,
+                                    "Límite alcanzado: Ya existen 3 eventos guardados. Elimina uno primero.",
+                                    android.widget.Toast.LENGTH_LONG
+                                ).show()
+                                return@Button
+                            }
+
+                            // Tomar respaldo previo para restaurar exactamente en caso de fallo (Rollback seguro)
+                            val eventsBefore = eventPreferences.getEventList()
+                            val qrsBefore = qrPreferences.getQrList()
+
                             val eventResponse = com.ulsa.deportes.ui.qrSection.qrHome.model.EventResponse(
-                                eventId = form.eventId,
+                                eventId = targetId,
                                 title = form.title,
                                 category = form.category,
                                 venue = form.venue,
@@ -324,13 +369,31 @@ fun QrScreenView(
                                 qrToken = createdQrData!!.qr.token,
                                 createdAt = java.time.Instant.now().toString()
                             )
-                            eventPreferences.saveEvent(eventResponse)
-                            existingEventList = qrPreferences.getQrList()
-                            qrCreated = false
-                            createdQrData = null
-                            editingEvent = null
-                            showForm = false
-                            onBack()
+
+                            // Guardar preferencias del organizador ingresado
+                            eventPreferences.saveOrganizerDefaults(form.organizerName, form.organizerId, form.organizerFaculty)
+
+                            // Guardado atómico
+                            val savedEvent = eventPreferences.saveEvent(eventResponse)
+                            val savedQr = qrPreferences.saveQr(createdQrData!!)
+
+                            if (savedEvent && savedQr) {
+                                existingEventList = qrPreferences.getQrList()
+                                qrCreated = false
+                                createdQrData = null
+                                editingEvent = null
+                                showForm = false
+                                onBack()
+                            } else {
+                                // Rollback al estado exacto previo sin alterar registros anteriores
+                                eventPreferences.restoreList(eventsBefore)
+                                qrPreferences.restoreList(qrsBefore)
+                                android.widget.Toast.makeText(
+                                    context,
+                                    "Error al guardar o límite alcanzado (3/3). No se aplicaron cambios.",
+                                    android.widget.Toast.LENGTH_LONG
+                                ).show()
+                            }
                         },
                         enabled = true,
                         modifier = Modifier
@@ -353,14 +416,14 @@ fun QrScreenView(
                         }
                     }
                 }
-                hasAnyQr && !qrCreated && selectedQrForView == null -> {
+                hasAnyQr && !qrCreated && selectedQrForView == null && !showForm -> {
                     if (!isAtMaxLimit) {
                         Button(
                             onClick = {
                                 form = EventFormData(
-                                    organizerName = "Jorge Chaparro",
-                                    organizerId = "14446",
-                                    organizerFaculty = "Ingeniería",
+                                    organizerName = eventPreferences.getOrganizerName(form.organizerName),
+                                    organizerId = eventPreferences.getOrganizerId(form.organizerId),
+                                    organizerFaculty = eventPreferences.getOrganizerFaculty(form.organizerFaculty),
                                     title = "Clásico ULSA 2026",
                                     category = EventCategory.DEPORTIVO,
                                     venue = "Estadio La Salle",
@@ -416,7 +479,13 @@ fun QrScreenView(
                 else -> {
                     Button(
                         onClick = { 
-                            if (isFormValid && state !is QrUiState.Loading) {
+                            if (eventPreferences.isAtMaxLimit() || qrPreferences.isAtMaxLimit() || existingEventList.size >= 3) {
+                                android.widget.Toast.makeText(
+                                    context,
+                                    "Límite alcanzado (3/3 eventos). Debes eliminar un evento antes de crear otro.",
+                                    android.widget.Toast.LENGTH_LONG
+                                ).show()
+                            } else if (isFormValid && state !is QrUiState.Loading) {
                                 // Convertir EventFormData a CreateQrRequest para el mock
                                 val now = java.time.Instant.now()
                                 val request = com.ulsa.deportes.ui.qrSection.qrHome.model.CreateQrRequest(
@@ -436,7 +505,7 @@ fun QrScreenView(
                                 viewModel.createQr(request)
                             }
                         },
-                        enabled = isFormValid && state !is QrUiState.Loading,
+                        enabled = isFormValid && state !is QrUiState.Loading && !isAtMaxLimit,
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 12.dp)
@@ -453,7 +522,7 @@ fun QrScreenView(
                         if (currentState is QrUiState.Loading) {
                             CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
                         } else {
-                            Text("Generar Evento", fontWeight = FontWeight.Bold)
+                            Text(if (editingEvent != null) "Actualizar Evento" else "Generar Evento", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -882,34 +951,38 @@ fun QrScreenView(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
+                                Column(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalAlignment = Alignment.Start,
+                                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    Text(
+                                        qr.eventSummary.category,
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = Color(0xFF1A73E8),
+                                        fontWeight = FontWeight.SemiBold
+                                    )
+                                    Text(
+                                        "${qr.eventSummary.venue} · ${formatIsoDate(qr.eventSummary.startsAt)}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color(0xFF6B7280)
+                                    )
+                                    Text(
+                                        "Puerta: ${qr.accessRules.entryGate}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = Color(0xFF6B7280)
+                                    )
+                                }
+
+                                Spacer(Modifier.height(4.dp))
+
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    horizontalArrangement = Arrangement.End,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Column(
-                                        horizontalAlignment = Alignment.Start,
-                                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        Text(
-                                            qr.eventSummary.category,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = Color(0xFF1A73E8),
-                                            fontWeight = FontWeight.SemiBold
-                                        )
-                                        Text(
-                                            "${qr.eventSummary.venue} · ${formatIsoDate(qr.eventSummary.startsAt)}",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = Color(0xFF6B7280)
-                                        )
-                                        Text(
-                                            "Puerta: ${qr.accessRules.entryGate}",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = Color(0xFF6B7280)
-                                        )
-                                    }
                                     Row(
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                        horizontalArrangement = Arrangement.spacedBy(6.dp)
                                     ) {
                                         Button(
                                             onClick = { selectedQrForView = qr },
@@ -917,32 +990,84 @@ fun QrScreenView(
                                                 containerColor = Color(0xFF1A73E8),
                                                 contentColor = Color.White
                                             ),
+                                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                                             modifier = Modifier.padding(vertical = 4.dp)
                                         ) {
-                                            Text("Ver", fontWeight = FontWeight.Bold)
+                                            Text("Ver", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
                                         }
                                         Button(
-                                            onClick = { editingEvent = qr },
+                                            onClick = {
+                                                editingEvent = qr
+                                                val eventSummary = qr.eventSummary
+                                                val userSummary = qr.userSummary
+                                                val accessRules = qr.accessRules
+
+                                                val dateFormatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")
+                                                val timeFormatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm")
+                                                val isoDateFormatter = java.time.format.DateTimeFormatter.ISO_LOCAL_DATE
+
+                                                val parsedDate = try {
+                                                    java.time.LocalDate.parse(eventSummary.startsAt, isoDateFormatter)
+                                                } catch (e: Exception) {
+                                                    java.time.LocalDate.now().plusDays(7)
+                                                }
+
+                                                val parsedStartTime = try {
+                                                    java.time.LocalTime.parse(accessRules.validFrom, timeFormatter)
+                                                } catch (e: Exception) {
+                                                    java.time.LocalTime.of(18, 0)
+                                                }
+
+                                                val parsedEndTime = try {
+                                                    java.time.LocalTime.parse(accessRules.validUntil, timeFormatter)
+                                                } catch (e: Exception) {
+                                                    java.time.LocalTime.of(20, 0)
+                                                }
+
+                                                val category = EventCategory.values().find { it.name == eventSummary.category } ?: EventCategory.DEPORTIVO
+
+                                                form = EventFormData(
+                                                    organizerName = userSummary?.studentName ?: "Jorge Chaparro",
+                                                    organizerId = userSummary?.studentId ?: "14446",
+                                                    organizerFaculty = userSummary?.faculty ?: "Ingeniería",
+                                                    title = eventSummary.title,
+                                                    category = category,
+                                                    venue = eventSummary.venue,
+                                                    date = parsedDate,
+                                                    startTime = parsedStartTime,
+                                                    endTime = parsedEndTime,
+                                                    capacity = 100,
+                                                    eventId = qr.ticketId
+                                                )
+
+                                                dateText = parsedDate.format(dateFormatter)
+                                                startTimeText = parsedStartTime.format(timeFormatter)
+                                                endTimeText = parsedEndTime.format(timeFormatter)
+                                                capacityText = "100"
+
+                                                qrCreated = false
+                                                createdQrData = null
+                                                showForm = true
+                                            },
                                             colors = ButtonDefaults.buttonColors(
                                                 containerColor = Color(0xFF1A73E8),
                                                 contentColor = Color.White
                                             ),
+                                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                                             modifier = Modifier.padding(vertical = 4.dp)
                                         ) {
-                                            Text("Editar", fontWeight = FontWeight.Bold)
+                                            Text("Editar", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
                                         }
                                         Button(
-                                            onClick = {
-                                                qrPreferences.removeQr(qr.ticketId)
-                                                existingEventList = qrPreferences.getQrList()
-                                            },
+                                            onClick = { itemToDelete = qr },
                                             colors = ButtonDefaults.buttonColors(
                                                 containerColor = Color(0xFFD32F2F),
                                                 contentColor = Color.White
                                             ),
+                                            contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                                             modifier = Modifier.padding(vertical = 4.dp)
                                         ) {
-                                            Text("Eliminar", fontWeight = FontWeight.Bold)
+                                            Text("Eliminar", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
                                         }
                                     }
                                 }
@@ -1055,6 +1180,7 @@ fun QrScreenView(
                 Button(
                     onClick = {
                         qrPreferences.clearAll()
+                        eventPreferences.clearAll()
                         existingEventList = qrPreferences.getQrList()
                         showExistingQrDialog = false
                     },
@@ -1085,8 +1211,7 @@ fun QrScreenView(
                             Text("Evento #$reversedIndex: ${qr.eventSummary.title}")
                             Button(
                                 onClick = {
-                                    qrPreferences.removeQr(qr.ticketId)
-                                    existingEventList = qrPreferences.getQrList()
+                                    itemToDelete = qr
                                     showExistingQrDialog = false
                                 },
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)),
@@ -1097,6 +1222,46 @@ fun QrScreenView(
                         }
                     }
                 }
+            }
+        )
+    }
+
+    // Diálogo de confirmación de eliminación individual
+    if (itemToDelete != null) {
+        val target = itemToDelete!!
+        AlertDialog(
+            onDismissRequest = { itemToDelete = null },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        // Sincronización robusta por múltiples claves (ticketId, token, title) para registros nuevos y antiguos
+                        qrPreferences.removeQr(target.ticketId)
+                        qrPreferences.removeQr(target.qr.token)
+                        qrPreferences.removeQr(target.eventSummary.title)
+
+                        eventPreferences.removeEvent(target.ticketId)
+                        eventPreferences.removeEvent(target.qr.token)
+                        eventPreferences.removeEvent(target.eventSummary.title)
+
+                        existingEventList = qrPreferences.getQrList()
+                        itemToDelete = null
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
+                ) {
+                    Text("Eliminar", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = { itemToDelete = null },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF5F5F5), contentColor = Color(0xFF1A73E8))
+                ) {
+                    Text("Cancelar", fontWeight = FontWeight.Bold)
+                }
+            },
+            title = { Text("¿Eliminar evento?", fontWeight = FontWeight.Bold) },
+            text = {
+                Text("¿Estás seguro de que deseas eliminar el evento '${target.eventSummary.title}'? También se eliminará su código QR asociado.")
             }
         )
     }
