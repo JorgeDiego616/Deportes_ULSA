@@ -78,6 +78,8 @@ private fun HomeContent(homeData: HomeData) {
         Spacer(Modifier.height(8.dp))
         EventsRow(homeData.events)
 
+        Spacer(Modifier.height(28.dp))
+
         Spacer(Modifier.height(16.dp))
     }
 }
