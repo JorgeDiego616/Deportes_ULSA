@@ -35,7 +35,7 @@ interface AuthService {
      *   a mano en el ViewModel, en vez de esperar un `HttpException`.
      */
     @POST(".")
-    suspend fun graphql(@Body body: GraphQLRequest): GraphQLResponse<LoginData>
+    suspend fun <T> graphql(@Body body: GraphQLRequest): GraphQLResponse<T>
 }
 
 /**

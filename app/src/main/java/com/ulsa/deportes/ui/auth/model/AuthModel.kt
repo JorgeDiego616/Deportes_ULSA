@@ -69,7 +69,35 @@ data class UserDto(
 )
 
 // ---------------------------------------------------------------------------
-// Estado observable de la pantalla de login (sin cambios respecto a antes)
+// Específico de la operación "registrarUsuario"
+// ---------------------------------------------------------------------------
+
+/** Lo que pide la mutation `registrarUsuario(input: RegistrarUsuarioInput!)`. */
+data class RegisterVariables(
+    val input: RegisterInput
+)
+
+/** Input para registrar un usuario. */
+data class RegisterInput(
+    val matricula: String,
+    val nombre: String,
+    val email: String,
+    val password: String
+)
+
+/** El campo `data.registrarUsuario` de la respuesta. */
+data class RegisterData(
+    val registrarUsuario: RegisterPayload
+)
+
+/** El `token` (JWT, 8h de vigencia) + los datos del usuario. */
+data class RegisterPayload(
+    val token: String,
+    val usuario: UserDto
+)
+
+// ---------------------------------------------------------------------------
+// Estado observable de la pantalla de login
 // ---------------------------------------------------------------------------
 
 /**
@@ -84,4 +112,24 @@ data class LoginUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val isLoggedIn: Boolean = false
+)
+
+// ---------------------------------------------------------------------------
+// Estado observable de la pantalla de registro
+// ---------------------------------------------------------------------------
+
+/**
+ * Estado observable de la pantalla de registro.
+ *
+ * @property isLoading true mientras se hace la petición.
+ * @property error mensaje de error general (no asociado a un campo).
+ * @property fieldErrors mapa de errores por campo (clave = nombre del campo).
+ * @property isRegistered pasa a true cuando el registro fue correcto y ya se guardó la
+ *   sesión; la vista lo observa para navegar a "tabs".
+ */
+data class RegisterUiState(
+    val isLoading: Boolean = false,
+    val error: String? = null,
+    val fieldErrors: Map<String, String> = emptyMap(),
+    val isRegistered: Boolean = false
 )

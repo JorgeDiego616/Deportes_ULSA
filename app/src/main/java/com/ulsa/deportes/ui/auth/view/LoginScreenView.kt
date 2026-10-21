@@ -1,6 +1,5 @@
 package com.ulsa.deportes.ui.auth.view
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -10,7 +9,16 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.*
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,6 +46,7 @@ private val SportBlueStrong = Color(0xFF0D47A1)
 @Composable
 fun LoginScreenView(
     onLoginSuccess: () -> Unit,
+    onRegisterClick: () -> Unit,
     viewModel: LoginViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -170,8 +179,7 @@ fun LoginScreenView(
 
             // Login Button
             Button(
-                onClick = { viewModel.login(email, password)
-                    Log.d("apiView", "Debugear")},
+                onClick = { viewModel.login(email, password) },
                 enabled = !uiState.isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -208,6 +216,29 @@ fun LoginScreenView(
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
                 )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Register Link
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "¿No tienes cuenta? ",
+                    color = SportBlueStrong.copy(alpha = 0.8f)
+                )
+                TextButton(
+                    onClick = onRegisterClick,
+                    enabled = !uiState.isLoading
+                ) {
+                    Text(
+                        text = "Regístrate",
+                        fontWeight = FontWeight.Bold,
+                        color = SportBlueStrong
+                    )
+                }
             }
         }
     }

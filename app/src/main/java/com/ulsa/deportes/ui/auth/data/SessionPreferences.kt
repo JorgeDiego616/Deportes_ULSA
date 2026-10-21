@@ -1,8 +1,10 @@
 package com.ulsa.deportes.ui.auth.data
 
 import android.content.Context
+import android.util.Base64
 import com.ulsa.deportes.common.preferences.AppPreferences
 import com.ulsa.deportes.ui.auth.model.UserDto
+import org.json.JSONObject
 
 private const val KEY_ACCESS = "auth_access"
 private const val KEY_REFRESH = "auth_refresh"
@@ -33,8 +35,54 @@ class SessionPreferences(context: Context) {
     /** Hay sesión si tenemos un refresh token guardado. */
     fun isLoggedIn(): Boolean = !refreshToken().isNullOrBlank()
 
+    /**
+     * Verifica si el access token actual es válido (no ha expirado).
+     * Decodifica el claim `exp` del JWT y lo compara con la hora actual.
+     * No verifica la firma criptográfica; solo expiración local.
+     */
+    fun isTokenValid(): Boolean {
+        val token = accessToken() ?: return false
+        val exp = getTokenExpiration(token) ?: return false
+        return System.currentTimeMillis() / 1000 < exp
+    }
+
+    /**
+     * Verifica si hay una sesión válida (token existe y no ha expirado).
+     * Si el token expiró, limpia la sesión automáticamente.
+     */
+    fun hasValidSession(): Boolean {
+        if (!isLoggedIn()) return false
+        if (!isTokenValid()) {
+            clearSession()
+            return false
+        }
+        return true
+    }
+
     /** Borra la sesión del dispositivo (logout). */
     fun clearSession() {
         appPreferences.remove(KEY_ACCESS, KEY_REFRESH, KEY_USERNAME)
+    }
+
+    /**
+     * Extrae el claim `exp` (expiración en segundos epoch) del JWT.
+     * El JWT tiene 3 partes separadas por '.': header.payload.signature
+     * La parte media (payload) está en base64url.
+     */
+    private fun getTokenExpiration(token: String): Long? {
+        return try {
+            val parts = token.split(".")
+            if (parts.size != 3) return null
+            val payload = parts[1]
+            // Base64 URL-safe decode (agregar padding si falta)
+            val normalized = payload.padEnd(payload.length + (4 - payload.length % 4) % 4, '=')
+                .replace('-', '+')
+                .replace('_', '/')
+            val decoded = Base64.decode(normalized, Base64.URL_SAFE or Base64.NO_WRAP)
+            val json = JSONObject(String(decoded))
+            json.getLong("exp")
+        } catch (e: Exception) {
+            null
+        }
     }
 }
