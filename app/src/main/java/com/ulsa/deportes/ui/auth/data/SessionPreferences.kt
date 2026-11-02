@@ -1,8 +1,10 @@
 package com.ulsa.deportes.ui.auth.data
 
 import android.content.Context
+import android.util.Base64
 import com.ulsa.deportes.common.preferences.AppPreferences
 import com.ulsa.deportes.ui.auth.model.UserDto
+import org.json.JSONObject
 
 private const val KEY_ACCESS = "auth_access"
 private const val KEY_REFRESH = "auth_refresh"
@@ -32,6 +34,31 @@ class SessionPreferences(context: Context) {
 
     /** Hay sesión si tenemos un refresh token guardado. */
     fun isLoggedIn(): Boolean = !refreshToken().isNullOrBlank()
+
+    /**
+     * Verifica si la sesión es válida (existe token y no ha expirado).
+     * Decodifica el JWT y revisa el claim `exp` comparándolo con la hora actual.
+     * No verifica la firma del token (eso requiere el backend).
+     */
+    fun isSessionValid(): Boolean {
+        val token = refreshToken() ?: return false
+        return try {
+            val payload = decodeJwtPayload(token)
+            val exp = payload.getLong("exp")
+            val now = System.currentTimeMillis() / 1000
+            exp > now
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    private fun decodeJwtPayload(token: String): JSONObject {
+        val parts = token.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+        if (parts.size != 3) throw IllegalArgumentException("JWT inválido")
+        val payload = parts[1]
+        val decoded = Base64.decode(payload, Base64.URL_SAFE or Base64.NO_WRAP)
+        return JSONObject(String(decoded))
+    }
 
     /** Borra la sesión del dispositivo (logout). */
     fun clearSession() {

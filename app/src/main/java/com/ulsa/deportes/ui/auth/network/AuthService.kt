@@ -3,6 +3,7 @@ package com.ulsa.deportes.ui.auth.network
 import com.ulsa.deportes.ui.auth.model.GraphQLRequest
 import com.ulsa.deportes.ui.auth.model.GraphQLResponse
 import com.ulsa.deportes.ui.auth.model.LoginData
+import com.ulsa.deportes.ui.auth.model.RegisterData
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -36,6 +37,9 @@ interface AuthService {
      */
     @POST(".")
     suspend fun graphql(@Body body: GraphQLRequest): GraphQLResponse<LoginData>
+
+    @POST(".")
+    suspend fun graphqlRegister(@Body body: GraphQLRequest): GraphQLResponse<RegisterData>
 }
 
 /**
