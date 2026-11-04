@@ -2,6 +2,7 @@ package com.ulsa.deportes.ui.navigation
 
 import android.app.Application
 import android.net.Uri
+import androidx.annotation.StringRes
 import com.ulsa.deportes.ui.teamsSection.APIRequest.view.ApiRequestView
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -25,6 +26,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -34,6 +36,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.ulsa.deportes.R
 import com.ulsa.deportes.common.preferences.AppPreferences
 
 import com.ulsa.deportes.ui.homeSection.homeHome.view.HomeHomeview
@@ -58,15 +61,15 @@ private const val REGISTRATION_ROUTE = "registration_screen/{eventId}"
 /**
  * Sealed class defining all bottom-tab routes with their metadata.
  */
-sealed class AppRoute(val route: String, val label: String, val icon: ImageVector) {
-    object Onboarding : AppRoute("onboarding", "Onboarding", Icons.Filled.Start)
-    object Login : AppRoute("login", "Login", Icons.Filled.Person)
-    object APIRequest : AppRoute("api_request", "API", Icons.Filled.Api)
-    object TeamsSection : AppRoute("team_section", "Teams", Icons.Filled.SportsSoccer)
-    object HomeHome : AppRoute("home_home", "Home", Icons.Filled.Home)
-    object NewsSection : AppRoute("news_section", "News", Icons.Filled.Newspaper)
-    object MatchesSection : AppRoute("matches_section", "Matches", Icons.Filled.CalendarMonth)
-    object ProfileSection : AppRoute("profile_section", "Profile", Icons.Filled.Person)
+sealed class AppRoute(val route: String, @StringRes val labelRes: Int, val icon: ImageVector) {
+    object Onboarding : AppRoute("onboarding", R.string.nav_onboarding, Icons.Filled.Start)
+    object Login : AppRoute("login", R.string.nav_login, Icons.Filled.Person)
+    object APIRequest : AppRoute("api_request", R.string.nav_api, Icons.Filled.Api)
+    object TeamsSection : AppRoute("team_section", R.string.nav_teams, Icons.Filled.SportsSoccer)
+    object HomeHome : AppRoute("home_home", R.string.nav_home, Icons.Filled.Home)
+    object NewsSection : AppRoute("news_section", R.string.nav_news, Icons.Filled.Newspaper)
+    object MatchesSection : AppRoute("matches_section", R.string.nav_matches, Icons.Filled.CalendarMonth)
+    object ProfileSection : AppRoute("profile_section", R.string.nav_profile, Icons.Filled.Person)
 }
 
 /** Ordered list of all tabs shown in the bottom bar. */
@@ -178,8 +181,8 @@ private fun TabsScaffold(
                                 restoreState = true
                             }
                         },
-                        icon = { Icon(tab.icon, contentDescription = tab.label) },
-                        label = { Text(tab.label, fontSize = 10.sp) }
+                        icon = { Icon(tab.icon, contentDescription = stringResource(tab.labelRes)) },
+                        label = { Text(stringResource(tab.labelRes), fontSize = 10.sp) }
                     )
                 }
             }
@@ -235,7 +238,7 @@ private fun TabsScaffold(
                     RegistrationScreenView(event = event, onBack = { navController.popBackStack() })
                 } else {
                     androidx.compose.material3.Text(
-                        text = "Evento no encontrado",
+                        text = stringResource(R.string.nav_event_not_found),
                         modifier = Modifier.fillMaxSize().padding(16.dp),
                         style = androidx.compose.material3.MaterialTheme.typography.bodyMedium
                     )

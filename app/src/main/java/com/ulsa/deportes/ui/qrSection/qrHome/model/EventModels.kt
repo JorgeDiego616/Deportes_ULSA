@@ -101,10 +101,10 @@ object DemoEventForm {
     fun defaults(): EventFormData = EventFormData(
         organizerName = "Jorge Chaparro",
         organizerId = "14446",
-        organizerFaculty = "Ingeniería",
-        title = "Clásico ULSA 2026",
+        organizerFaculty = "Engineering",
+        title = "ULSA Classic 2026",
         category = EventCategory.DEPORTIVO,
-        venue = "Estadio La Salle",
+        venue = "La Salle Stadium",
         date = LocalDate.now().plusDays(7),
         startTime = LocalTime.of(18, 0),
         endTime = LocalTime.of(20, 0),

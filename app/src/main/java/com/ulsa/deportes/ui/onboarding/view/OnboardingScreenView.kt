@@ -21,11 +21,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp
+import com.ulsa.deportes.R
 import com.ulsa.deportes.ui.onboarding.model.OnboardingPage
 import com.ulsa.deportes.ui.onboarding.viewmodel.OnboardingViewModel
 import kotlinx.coroutines.launch
@@ -147,7 +149,7 @@ fun OnboardingScreenView(
                         ),
                         border = androidx.compose.foundation.BorderStroke(2.dp, SportBlueStrong)
                     ) {
-                        Text(text = "Back", fontWeight = FontWeight.ExtraBold)
+                        Text(text = stringResource(R.string.onboarding_back), fontWeight = FontWeight.ExtraBold)
                     }
                 }
 
@@ -172,7 +174,11 @@ fun OnboardingScreenView(
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
                 ) {
                     Text(
-                        text = if (pagerState.currentPage < pages.size - 1) "Next" else "Get started",
+                        text = if (pagerState.currentPage < pages.size - 1) {
+                            stringResource(R.string.onboarding_next)
+                        } else {
+                            stringResource(R.string.onboarding_get_started)
+                        },
                         fontWeight = FontWeight.Black,
                         fontSize = 18.sp
                     )
@@ -217,7 +223,7 @@ fun OnboardingPageItem(
         Spacer(modifier = Modifier.height(40.dp))
         
         Text(
-            text = page.title.uppercase(),
+            text = stringResource(page.title).uppercase(),
             fontSize = 30.sp,
             fontWeight = FontWeight.Black,
             textAlign = TextAlign.Center,
@@ -229,7 +235,7 @@ fun OnboardingPageItem(
         Spacer(modifier = Modifier.height(16.dp))
         
         Text(
-            text = page.description,
+            text = stringResource(page.description),
             fontSize = 17.sp,
             textAlign = TextAlign.Center,
             color = SportBlueStrong.copy(alpha = 0.9f),

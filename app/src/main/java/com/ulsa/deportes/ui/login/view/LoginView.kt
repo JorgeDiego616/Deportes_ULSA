@@ -55,7 +55,7 @@ fun LoginView(onLoginSuccess: () -> Unit) {
     ) {
         // Texto de Bienvenida
         Text(
-            text = "¡Bienvenido!",
+            text = stringResource(R.string.login_welcome_exclamation),
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary
@@ -99,7 +99,10 @@ fun LoginView(onLoginSuccess: () -> Unit) {
             trailingIcon = {
                 val icon = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
-                    Icon(imageVector = icon, contentDescription = "Toggle Password Visibility")
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = stringResource(R.string.login_toggle_password_visibility)
+                    )
                 }
             },
             modifier = Modifier.fillMaxWidth()

@@ -20,11 +20,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.ulsa.deportes.R
 import com.ulsa.deportes.data.repository.SportsRepositoryImpl
 import com.ulsa.deportes.ui.components.ErrorView
 import com.ulsa.deportes.ui.components.LoadingView
@@ -66,12 +68,12 @@ fun matchesHomeView(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { viewModel.setSearchQuery(it) },
-                placeholder = { Text("Buscar por equipo, deporte o sede...") },
+                placeholder = { Text(stringResource(R.string.matches_search_placeholder)) },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary) },
                 trailingIcon = {
                     if (searchQuery.isNotBlank()) {
                         IconButton(onClick = { viewModel.setSearchQuery("") }) {
-                            Icon(Icons.Default.Clear, contentDescription = "Limpiar búsqueda")
+                            Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.matches_clear_search))
                         }
                     }
                 },
@@ -99,7 +101,7 @@ fun matchesHomeView(
                             FilterChip(
                                 selected = selectedSport == null,
                                 onClick = { viewModel.setSelectedSport(null) },
-                                label = { Text("Todos los deportes") }
+                                label = { Text(stringResource(R.string.matches_all_sports)) }
                             )
                             sports.forEach { sport ->
                                 FilterChip(
@@ -119,10 +121,10 @@ fun matchesHomeView(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         val statuses = listOf(
-                            MatchStatusFilter.ALL to "Todos",
-                            MatchStatusFilter.LIVE to "En vivo",
-                            MatchStatusFilter.UPCOMING to "Próximos",
-                            MatchStatusFilter.FINISHED to "Finalizados"
+                            MatchStatusFilter.ALL to stringResource(R.string.matches_status_all),
+                            MatchStatusFilter.LIVE to stringResource(R.string.matches_status_live),
+                            MatchStatusFilter.UPCOMING to stringResource(R.string.matches_status_upcoming),
+                            MatchStatusFilter.FINISHED to stringResource(R.string.matches_status_finished)
                         )
                         statuses.forEach { (filterEnum, label) ->
                             FilterChip(
@@ -140,7 +142,7 @@ fun matchesHomeView(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "${filteredMatches.size} partido(s)",
+                            text = stringResource(R.string.matches_count, filteredMatches.size),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -150,9 +152,9 @@ fun matchesHomeView(
                             TextButton(onClick = { sortExpanded = true }) {
                                 Text(
                                     text = when (selectedSort) {
-                                        MatchSortOption.RECENT -> "Orden: Más reciente"
-                                        MatchSortOption.UPCOMING -> "Orden: Más próximo"
-                                        MatchSortOption.SCORE_DIFFERENCE -> "Orden: Dif. marcador"
+                                        MatchSortOption.RECENT -> stringResource(R.string.matches_sort_recent)
+                                        MatchSortOption.UPCOMING -> stringResource(R.string.matches_sort_upcoming)
+                                        MatchSortOption.SCORE_DIFFERENCE -> stringResource(R.string.matches_sort_score_difference)
                                     },
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Bold
@@ -163,21 +165,21 @@ fun matchesHomeView(
                                 onDismissRequest = { sortExpanded = false }
                             ) {
                                 DropdownMenuItem(
-                                    text = { Text("Más reciente") },
+                                    text = { Text(stringResource(R.string.matches_sort_recent_option)) },
                                     onClick = {
                                         viewModel.setSelectedSort(MatchSortOption.RECENT)
                                         sortExpanded = false
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Más próximo") },
+                                    text = { Text(stringResource(R.string.matches_sort_upcoming_option)) },
                                     onClick = {
                                         viewModel.setSelectedSort(MatchSortOption.UPCOMING)
                                         sortExpanded = false
                                     }
                                 )
                                 DropdownMenuItem(
-                                    text = { Text("Mayor diferencia de marcador") },
+                                    text = { Text(stringResource(R.string.matches_sort_score_difference_option)) },
                                     onClick = {
                                         viewModel.setSelectedSort(MatchSortOption.SCORE_DIFFERENCE)
                                         sortExpanded = false
@@ -201,11 +203,11 @@ fun matchesHomeView(
         ) {
             when (val state = uiState) {
                 is MatchesUiState.Loading -> {
-                    LoadingView(message = "Cargando partidos deportivos...")
+                    LoadingView(message = stringResource(R.string.matches_loading))
                 }
                 is MatchesUiState.Error -> {
                     ErrorView(
-                        message = state.message,
+                        message = stringResource(state.messageRes),
                         onRetry = { viewModel.loadMatches() }
                     )
                 }
@@ -219,7 +221,7 @@ fun matchesHomeView(
                             verticalArrangement = Arrangement.Center
                         ) {
                             Text(
-                                text = "No se encontraron partidos con los filtros seleccionados 😢",
+                                text = stringResource(R.string.matches_empty),
                                 style = MaterialTheme.typography.bodyLarge,
                                 textAlign = TextAlign.Center,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -229,7 +231,7 @@ fun matchesHomeView(
                                 onClick = { viewModel.clearFilters() },
                                 shape = RoundedCornerShape(12.dp)
                             ) {
-                                Text("Limpiar filtros", fontWeight = FontWeight.Bold)
+                                Text(stringResource(R.string.matches_clear_filters), fontWeight = FontWeight.Bold)
                             }
                         }
                     } else {
@@ -252,9 +254,9 @@ fun matchesHomeView(
 private fun MatchCardItem(match: MatchScore, viewModel: MatchesViewModel, onClick: () -> Unit) {
     val statusFilter = viewModel.determineMatchStatus(match)
     val statusText = when (statusFilter) {
-        MatchStatusFilter.LIVE -> "EN VIVO"
-        MatchStatusFilter.UPCOMING -> "PRÓXIMO"
-        MatchStatusFilter.FINISHED -> "FINALIZADO"
+        MatchStatusFilter.LIVE -> stringResource(R.string.matches_status_live_upper)
+        MatchStatusFilter.UPCOMING -> stringResource(R.string.matches_status_upcoming_upper)
+        MatchStatusFilter.FINISHED -> stringResource(R.string.matches_status_finished_upper)
         else -> match.status.uppercase()
     }
     val statusColor = when (statusFilter) {

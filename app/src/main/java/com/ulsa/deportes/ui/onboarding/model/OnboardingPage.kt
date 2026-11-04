@@ -1,9 +1,10 @@
 package com.ulsa.deportes.ui.onboarding.model
 
 import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 
 data class OnboardingPage(
-    val title: String,
-    val description: String,
+    @StringRes val title: Int,
+    @StringRes val description: Int,
     @DrawableRes val imageRes: Int
 )

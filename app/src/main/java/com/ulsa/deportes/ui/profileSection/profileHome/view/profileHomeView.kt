@@ -34,11 +34,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ulsa.deportes.R
 import com.ulsa.deportes.ui.profileSection.profileHome.viewmodel.profileHomeViewModel
 import com.ulsa.deportes.ui.qrSection.qrHome.data.EventPreferences
 import com.ulsa.deportes.ui.qrSection.qrHome.data.QrPreferences
@@ -77,7 +79,7 @@ fun profileHomeView(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "Información Personal",
+            text = stringResource(R.string.profile_personal_info),
             style = MaterialTheme.typography.titleLarge,
             fontWeight = FontWeight.Bold
         )
@@ -87,7 +89,7 @@ fun profileHomeView(
         // Mostrar eventos guardados con botón para abrir y botón para eliminar
         if (eventList.isNotEmpty()) {
             Text(
-                "Tus eventos (${eventList.size}/3)",
+                stringResource(R.string.profile_your_events, eventList.size),
                 style = MaterialTheme.typography.bodyMedium,
                 color = Color(0xFF6B7280),
                 fontWeight = FontWeight.SemiBold
@@ -144,7 +146,7 @@ fun profileHomeView(
                                 }
                                 Icon(
                                     imageVector = Icons.Filled.ArrowRight,
-                                    contentDescription = "Registrarse",
+                                    contentDescription = stringResource(R.string.profile_open_event),
                                     tint = Color.White
                                 )
                             }
@@ -157,7 +159,7 @@ fun profileHomeView(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Delete,
-                                contentDescription = "Eliminar evento",
+                                contentDescription = stringResource(R.string.profile_delete_event),
                                 tint = Color(0xFFD32F2F)
                             )
                         }
@@ -178,7 +180,7 @@ fun profileHomeView(
         ) {
             Icon(imageVector = Icons.Filled.Event, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Crear Evento", fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.profile_create_event), fontWeight = FontWeight.Bold)
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -189,7 +191,7 @@ fun profileHomeView(
                 contentDescription = null
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text("Cerrar sesión")
+            Text(stringResource(R.string.profile_logout))
         }
     }
 
@@ -198,9 +200,9 @@ fun profileHomeView(
         val target = eventToDelete!!
         AlertDialog(
             onDismissRequest = { eventToDelete = null },
-            title = { Text("¿Eliminar evento?", fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.profile_delete_dialog_title), fontWeight = FontWeight.Bold) },
             text = {
-                Text("¿Estás seguro de que deseas eliminar el evento '${target.title}'? También se eliminará su código QR asociado.")
+                Text(stringResource(R.string.profile_delete_dialog_message, target.title))
             },
             confirmButton = {
                 Button(
@@ -217,7 +219,7 @@ fun profileHomeView(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
                 ) {
-                    Text("Eliminar", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.profile_delete), color = Color.White, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -225,7 +227,7 @@ fun profileHomeView(
                     onClick = { eventToDelete = null },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF5F5F5), contentColor = Color(0xFF1A73E8))
                 ) {
-                    Text("Cancelar", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.profile_cancel), fontWeight = FontWeight.Bold)
                 }
             }
         )

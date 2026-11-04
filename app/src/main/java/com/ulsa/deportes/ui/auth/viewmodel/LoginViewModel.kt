@@ -3,6 +3,7 @@ package com.ulsa.deportes.ui.auth.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.ulsa.deportes.R
 import com.ulsa.deportes.ui.auth.data.SessionPreferences
 import com.ulsa.deportes.ui.auth.model.GraphQLRequest
 import com.ulsa.deportes.ui.auth.model.LoginData
@@ -62,7 +63,7 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
      */
     fun login(email: String, password: String) {
         if (email.isBlank() || password.isBlank()) {
-            _uiState.update { it.copy(error = "Ingresa correo y contraseña") }
+            _uiState.update { it.copy(error = getApplication<Application>().getString(R.string.login_error_empty_fields)) }
             return
         }
 
@@ -83,7 +84,12 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
 
                 val payload = response.data?.login
                 if (payload == null) {
-                    _uiState.update { it.copy(isLoading = false, error = "Respuesta inesperada del servidor.") }
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = getApplication<Application>().getString(R.string.login_error_unexpected_response)
+                        )
+                    }
                     return@launch
                 }
 
@@ -91,11 +97,17 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
                 _uiState.update { it.copy(isLoading = false, isLoggedIn = true) }
             } catch (e: SocketTimeoutException) {
                 _uiState.update {
-                    it.copy(isLoading = false, error = "No se pudo conectar al servidor. Verifica que esté corriendo.")
+                    it.copy(
+                        isLoading = false,
+                        error = getApplication<Application>().getString(R.string.login_error_server_not_running)
+                    )
                 }
             } catch (e: Exception) {
                 _uiState.update {
-                    it.copy(isLoading = false, error = "Sin conexión. Revisa tu red e intenta de nuevo.")
+                    it.copy(
+                        isLoading = false,
+                        error = getApplication<Application>().getString(R.string.login_error_no_connection)
+                    )
                 }
             }
         }
@@ -111,8 +123,10 @@ class LoginViewModel(application: Application) : AndroidViewModel(application) {
      * el resolver de `seguridad-service`) a algo consistente para el usuario.
      */
     private fun mapServerError(message: String): String = when {
-        message.contains("Credenciales inválidas", ignoreCase = true) -> "Correo o contraseña incorrectos"
-        message.contains("deshabilitado", ignoreCase = true) -> "Esta cuenta está deshabilitada"
+        message.contains("Credenciales inválidas", ignoreCase = true) ->
+            getApplication<Application>().getString(R.string.login_error_invalid_credentials)
+        message.contains("deshabilitado", ignoreCase = true) ->
+            getApplication<Application>().getString(R.string.login_error_disabled_account)
         else -> message
     }
 }

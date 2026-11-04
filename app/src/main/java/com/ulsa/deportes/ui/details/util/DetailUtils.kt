@@ -7,13 +7,13 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 /**
- * Formatea una fecha ISO a formato largo en español (ej. "7 de septiembre de 2026").
+ * Formats an ISO date into a long English date (e.g. "September 7, 2026").
  */
-fun formatLongSpanishDate(isoDate: String): String {
+fun formatLongDate(isoDate: String): String {
     return try {
         val datePart = isoDate.substringBefore("T")
         val localDate = LocalDate.parse(datePart)
-        val formatter = DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", Locale("es", "ES"))
+        val formatter = DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.ENGLISH)
         localDate.format(formatter)
     } catch (_: Exception) {
         isoDate
