@@ -1,8 +1,10 @@
 package com.ulsa.deportes.ui.matchesSection.matchesHome.viewmodel
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.ulsa.deportes.R
 import com.ulsa.deportes.domain.repository.SportsRepository
 import com.ulsa.deportes.ui.homeSection.homeHome.model.MatchScore
 import kotlinx.coroutines.CoroutineDispatcher
@@ -28,7 +30,7 @@ sealed interface MatchesUiState {
         val matches: List<MatchScore>,
         val availableSports: List<String>
     ) : MatchesUiState
-    data class Error(val message: String) : MatchesUiState
+    data class Error(@StringRes val messageRes: Int) : MatchesUiState
 }
 
 class MatchesViewModel(
@@ -129,7 +131,7 @@ class MatchesViewModel(
                 _availableSports.value = sports
                 _uiState.value = MatchesUiState.Success(matches, sports)
             } catch (e: Exception) {
-                _uiState.value = MatchesUiState.Error(e.message ?: "Error al cargar partidos")
+                _uiState.value = MatchesUiState.Error(R.string.matches_error_loading)
             }
         }
     }

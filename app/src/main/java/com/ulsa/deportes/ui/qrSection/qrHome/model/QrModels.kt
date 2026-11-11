@@ -63,7 +63,7 @@ data class CreateQrRequest(
 ) {
     init {
         require(creationMode != CreationMode.DYNAMIC_INDIVIDUAL_PASS || userId != null) {
-            "user_id es obligatorio en dynamic_individual_pass"
+            "user_id is required for dynamic_individual_pass"
         }
     }
 }
@@ -162,10 +162,10 @@ object DemoQrForm {
     fun defaults(): QrFormData = QrFormData(
         studentName = "Jorge Chaparro",
         studentId = "14446",
-        faculty = "Ingeniería",
-        eventTitle = "Clásico ULSA 2026",
-        eventCategory = "Fútbol",
-        eventVenue = "Estadio La Salle",
+        faculty = "Engineering",
+        eventTitle = "ULSA Classic 2026",
+        eventCategory = "Soccer",
+        eventVenue = "La Salle Stadium",
         eventId = "evento-demo-ulsa",
         creationMode = CreationMode.STATIC_EVENT_CHECKIN,
     )

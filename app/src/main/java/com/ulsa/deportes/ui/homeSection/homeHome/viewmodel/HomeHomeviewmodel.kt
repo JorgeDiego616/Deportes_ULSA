@@ -1,7 +1,9 @@
 package com.ulsa.deportes.ui.homeSection.homeHome.viewmodel
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.ulsa.deportes.R
 import com.ulsa.deportes.ui.homeSection.homeHome.model.HomeData
 import com.ulsa.deportes.ui.homeSection.homeHome.network.HomeRetrofitClient
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +16,7 @@ import java.io.IOException
 sealed class HomeUiState {
     object Loading : HomeUiState()
     data class Success(val data: HomeData) : HomeUiState()
-    data class Error(val message: String) : HomeUiState()
+    data class Error(@StringRes val messageRes: Int) : HomeUiState()
 }
 
 class HomeViewModel : ViewModel() {
@@ -35,9 +37,9 @@ class HomeViewModel : ViewModel() {
             } catch (e: IOException) {
                 // Sin internet, DNS, timeout, etc. (Render puede tardar en
                 // "despertar" si el servicio estaba dormido por inactividad).
-                HomeUiState.Error("No se pudo conectar. Verifica tu conexión e intenta de nuevo.")
+                HomeUiState.Error(R.string.error_no_connection)
             } catch (e: HttpException) {
-                HomeUiState.Error("Error del servidor (${e.code()}).")
+                HomeUiState.Error(R.string.error_server)
             }
         }
     }

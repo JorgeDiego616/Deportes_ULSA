@@ -19,9 +19,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.ulsa.deportes.R
 
 /**
  * Vista de error reutilizable con icono, mensaje y botón de reintento opcional.
@@ -31,7 +33,7 @@ fun ErrorView(
     message: String,
     modifier: Modifier = Modifier,
     onRetry: (() -> Unit)? = null,
-    retryText: String = "Reintentar"
+    retryText: String? = null
 ) {
     Box(
         modifier = modifier.fillMaxSize(),
@@ -44,7 +46,7 @@ fun ErrorView(
         ) {
             Icon(
                 imageVector = Icons.Default.Warning,
-                contentDescription = "Error",
+                contentDescription = stringResource(R.string.common_error),
                 tint = MaterialTheme.colorScheme.error,
                 modifier = Modifier.size(48.dp)
             )
@@ -66,7 +68,7 @@ fun ErrorView(
                     )
                 ) {
                     Text(
-                        text = retryText,
+                        text = retryText ?: stringResource(R.string.common_retry),
                         fontWeight = FontWeight.Bold
                     )
                 }

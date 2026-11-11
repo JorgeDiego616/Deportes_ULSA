@@ -37,10 +37,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.ulsa.deportes.R
 import com.ulsa.deportes.ui.components.ErrorView
 import com.ulsa.deportes.ui.components.LoadingView
 import com.ulsa.deportes.ui.components.SportCard
@@ -59,7 +61,7 @@ fun ApiRequestView(
             TopAppBar(
                 title = {
                     Text(
-                        text = "Equipos ULSA",
+                        text = stringResource(R.string.teams_title),
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onPrimary
                     )
@@ -68,7 +70,7 @@ fun ApiRequestView(
                     IconButton(onClick = onBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Regresar",
+                            contentDescription = stringResource(R.string.teams_back),
                             tint = MaterialTheme.colorScheme.onPrimary
                         )
                     }
@@ -100,8 +102,8 @@ fun TeamsListContent(
     val error by viewModel.error.collectAsState()
 
     when {
-        isLoading -> LoadingView(message = "Cargando equipos deportivos...")
-        error != null -> ErrorView(message = "Error al cargar equipos: $error")
+        isLoading -> LoadingView(message = stringResource(R.string.teams_loading))
+        error != null -> ErrorView(message = stringResource(R.string.teams_error_loading))
         else -> LazyColumn(
             contentPadding = PaddingValues(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -109,8 +111,8 @@ fun TeamsListContent(
             item {
                 Spacer(modifier = Modifier.height(8.dp))
                 SportHeader(
-                    title = "Equipos Representativos",
-                    subtitle = "Delegaciones y equipos deportivos ULSA"
+                    title = stringResource(R.string.teams_header),
+                    subtitle = stringResource(R.string.teams_header_subtitle)
                 )
             }
             items(students) { team ->
@@ -191,7 +193,7 @@ fun TeamCard(team: Team, onClick: () -> Unit = {}) {
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "Entrenador: ${team.coachName}",
+                        text = stringResource(R.string.teams_coach, team.coachName),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontWeight = FontWeight.Medium

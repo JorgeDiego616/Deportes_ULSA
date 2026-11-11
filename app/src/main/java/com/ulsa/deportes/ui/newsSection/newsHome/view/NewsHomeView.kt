@@ -11,11 +11,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.ulsa.deportes.R
 import com.ulsa.deportes.data.repository.SportsRepositoryImpl
 import com.ulsa.deportes.ui.components.SportCard
 import com.ulsa.deportes.ui.homeSection.homeHome.network.HomeRetrofitClient
@@ -30,7 +32,7 @@ fun NewsHomeView(
 ) {
     val newsList by viewModel.newsList.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
-    val errorMessage by viewModel.errorMessage.collectAsState()
+    val errorMessageRes by viewModel.errorMessageRes.collectAsState()
 
     LaunchedEffect(Unit) {
         viewModel.fetchNews()
@@ -42,7 +44,7 @@ fun NewsHomeView(
             .padding(16.dp)
     ) {
         Text(
-            text = "Noticias de ULSA Deportes",
+            text = stringResource(R.string.news_title),
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary
@@ -56,11 +58,11 @@ fun NewsHomeView(
                     CircularProgressIndicator()
                 }
             }
-            errorMessage != null -> {
+            errorMessageRes != null -> {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = errorMessage!!, color = MaterialTheme.colorScheme.error)
+                    Text(text = stringResource(errorMessageRes!!), color = MaterialTheme.colorScheme.error)
                     Button(onClick = { viewModel.fetchNews() }) {
-                        Text("Reintentar")
+                        Text(stringResource(R.string.news_retry))
                     }
                 }
             }

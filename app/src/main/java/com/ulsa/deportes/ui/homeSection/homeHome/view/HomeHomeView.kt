@@ -22,12 +22,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.ulsa.deportes.R
 import com.ulsa.deportes.ui.components.ErrorView
 import com.ulsa.deportes.ui.components.LoadingView
 import com.ulsa.deportes.ui.components.SportCard
@@ -47,11 +49,11 @@ fun HomeHomeview(
 
     when (val state = uiState) {
         is HomeUiState.Loading -> {
-            LoadingView(message = "Cargando el centro deportivo ULSA...")
+            LoadingView(message = stringResource(R.string.home_loading))
         }
         is HomeUiState.Error -> {
             ErrorView(
-                message = state.message,
+                message = stringResource(state.messageRes),
                 onRetry = { viewModel.loadHome() }
             )
         }
@@ -86,8 +88,8 @@ private fun HomeContent(
 
         // Sección 1: Resultados Deportivos (Horizontal)
         SportHeader(
-            title = "Resultados Recientes",
-            subtitle = "Últimos marcadores de los equipos ULSA"
+            title = stringResource(R.string.home_recent_results),
+            subtitle = stringResource(R.string.home_recent_results_subtitle)
         )
         Spacer(Modifier.height(8.dp))
         ScoresRow(homeData.scores, onClick = onNavigateToMatch)
@@ -96,8 +98,8 @@ private fun HomeContent(
 
         // Sección 2: Noticias Deportivas (Vertical)
         SportHeader(
-            title = "Noticias y Novedades",
-            subtitle = "Mantente al día con el deporte universitario"
+            title = stringResource(R.string.home_news),
+            subtitle = stringResource(R.string.home_news_subtitle)
         )
         Spacer(Modifier.height(8.dp))
         NewsSectionList(homeData.news, onClick = onNavigateToNews)
@@ -106,8 +108,8 @@ private fun HomeContent(
 
         // Sección 3: Próximos Eventos (Horizontal)
         SportHeader(
-            title = "Próximos Eventos",
-            subtitle = "Torneos, jornadas y convocatorias"
+            title = stringResource(R.string.home_upcoming_events),
+            subtitle = stringResource(R.string.home_upcoming_events_subtitle)
         )
         Spacer(Modifier.height(8.dp))
         EventsRow(homeData.events, onClick = onNavigateToEvent)
@@ -139,7 +141,7 @@ private fun HomeHeaderBanner() {
                         shape = RoundedCornerShape(20.dp)
                     ) {
                         Text(
-                            text = "TEMPORADA 2026",
+                            text = stringResource(R.string.home_season),
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Black,
@@ -148,7 +150,7 @@ private fun HomeHeaderBanner() {
                     }
                     Spacer(Modifier.height(6.dp))
                     Text(
-                        text = "DEPORTES ULSA",
+                        text = stringResource(R.string.home_title),
                         style = MaterialTheme.typography.headlineLarge,
                         color = MaterialTheme.colorScheme.onPrimary,
                         fontWeight = FontWeight.Black
@@ -239,7 +241,7 @@ private fun ScoreCard(match: MatchScore, onClick: () -> Unit) {
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "FINAL",
+                    text = stringResource(R.string.home_final),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.SemiBold
@@ -360,7 +362,7 @@ private fun NewsCard(item: NewsItem, onClick: () -> Unit) {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Por ${item.author}",
+                        text = stringResource(R.string.home_by_author, item.author),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.SemiBold

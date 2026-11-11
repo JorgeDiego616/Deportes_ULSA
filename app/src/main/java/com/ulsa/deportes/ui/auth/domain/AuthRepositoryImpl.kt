@@ -1,6 +1,7 @@
 package com.ulsa.deportes.ui.auth.domain
 
 import android.app.Application
+import com.ulsa.deportes.R
 import com.ulsa.deportes.ui.auth.data.SessionPreferences
 import com.ulsa.deportes.ui.auth.model.GraphQLRequest
 import com.ulsa.deportes.ui.auth.model.LoginData
@@ -63,7 +64,7 @@ class AuthRepositoryImpl(private val application: Application) : AuthRepository 
             } else {
                 val payload = response.data?.login
                 if (payload == null) {
-                    Result.failure(AuthRepository.AuthError.UnknownError("Respuesta inesperada del servidor."))
+                    Result.failure(AuthRepository.AuthError.UnknownError(application.getString(R.string.auth_error_unexpected_response)))
                 } else {
                     session.saveSession(payload.token, payload.token, payload.usuario)
                     _isLoggedIn.value = true
@@ -71,9 +72,9 @@ class AuthRepositoryImpl(private val application: Application) : AuthRepository 
                 }
             }
         } catch (e: java.net.SocketTimeoutException) {
-            Result.failure(AuthRepository.AuthError.NetworkError("No se pudo conectar al servidor. Verifica que esté corriendo."))
+            Result.failure(AuthRepository.AuthError.NetworkError(application.getString(R.string.auth_error_server_not_running)))
         } catch (e: Exception) {
-            Result.failure(AuthRepository.AuthError.NetworkError("Sin conexión. Revisa tu red e intenta de nuevo."))
+            Result.failure(AuthRepository.AuthError.NetworkError(application.getString(R.string.auth_error_no_connection)))
         }
     }
 
@@ -108,7 +109,7 @@ class AuthRepositoryImpl(private val application: Application) : AuthRepository 
             } else {
                 val payload = response.data?.registrarUsuario
                 if (payload == null) {
-                    Result.failure(AuthRepository.AuthError.UnknownError("Respuesta inesperada del servidor."))
+                    Result.failure(AuthRepository.AuthError.UnknownError(application.getString(R.string.auth_error_unexpected_response)))
                 } else {
                     session.saveSession(payload.token, payload.token, payload.usuario)
                     _isLoggedIn.value = true
@@ -116,20 +117,34 @@ class AuthRepositoryImpl(private val application: Application) : AuthRepository 
                 }
             }
         } catch (e: java.net.SocketTimeoutException) {
-            Result.failure(AuthRepository.AuthError.NetworkError("No se pudo conectar al servidor. Verifica que esté corriendo."))
+            Result.failure(AuthRepository.AuthError.NetworkError(application.getString(R.string.auth_error_server_not_running)))
         } catch (e: Exception) {
-            Result.failure(AuthRepository.AuthError.NetworkError("Sin conexión. Revisa tu red e intenta de nuevo."))
+            Result.failure(AuthRepository.AuthError.NetworkError(application.getString(R.string.auth_error_no_connection)))
         }
     }
 
-    private fun mapServerError(message: String): AuthRepository.AuthError = when {
-        message.contains("Credenciales inválidas", ignoreCase = true) -> AuthRepository.AuthError.InvalidCredentials("Correo o contraseña incorrectos")
-        message.contains("deshabilitado", ignoreCase = true) -> AuthRepository.AuthError.AccountDisabled("Esta cuenta está deshabilitada")
-        message.contains("ya existe", ignoreCase = true) -> AuthRepository.AuthError.ServerError("Ya existe una cuenta con este correo", mapOf("email" to "Ya existe una cuenta con este correo"))
-        message.contains("ya registrado", ignoreCase = true) -> AuthRepository.AuthError.ServerError("Ya existe una cuenta con este correo", mapOf("email" to "Ya existe una cuenta con este correo"))
-        message.contains("matrícula", ignoreCase = true) -> AuthRepository.AuthError.ServerError("Esta matrícula ya está registrada", mapOf("matricula" to "Esta matrícula ya está registrada"))
-        message.contains("matricula", ignoreCase = true) -> AuthRepository.AuthError.ServerError("Esta matrícula ya está registrada", mapOf("matricula" to "Esta matrícula ya está registrada"))
-        else -> AuthRepository.AuthError.UnknownError(message)
+    private fun mapServerError(message: String): AuthRepository.AuthError {
+        val emailExists = application.getString(R.string.auth_error_email_exists)
+        val matriculaExists = application.getString(R.string.auth_error_matricula_exists)
+        return when {
+            message.contains("Credenciales inválidas", ignoreCase = true) ->
+                AuthRepository.AuthError.InvalidCredentials(
+                    application.getString(R.string.auth_error_invalid_credentials)
+                )
+            message.contains("deshabilitado", ignoreCase = true) ->
+                AuthRepository.AuthError.AccountDisabled(
+                    application.getString(R.string.auth_error_disabled_account)
+                )
+            message.contains("ya existe", ignoreCase = true) ->
+                AuthRepository.AuthError.ServerError(emailExists, mapOf("email" to emailExists))
+            message.contains("ya registrado", ignoreCase = true) ->
+                AuthRepository.AuthError.ServerError(emailExists, mapOf("email" to emailExists))
+            message.contains("matrícula", ignoreCase = true) ->
+                AuthRepository.AuthError.ServerError(matriculaExists, mapOf("matricula" to matriculaExists))
+            message.contains("matricula", ignoreCase = true) ->
+                AuthRepository.AuthError.ServerError(matriculaExists, mapOf("matricula" to matriculaExists))
+            else -> AuthRepository.AuthError.UnknownError(message)
+        }
     }
 
     private fun parseFieldErrors(errors: List<com.ulsa.deportes.ui.auth.model.GraphQLError>): Map<String, String> {

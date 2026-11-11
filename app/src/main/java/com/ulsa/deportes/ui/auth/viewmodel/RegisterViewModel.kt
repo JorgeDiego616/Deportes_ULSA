@@ -3,6 +3,7 @@ package com.ulsa.deportes.ui.auth.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.ulsa.deportes.R
 import com.ulsa.deportes.ui.auth.domain.AuthRepository
 import com.ulsa.deportes.ui.auth.model.RegisterUiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -69,14 +70,15 @@ class RegisterViewModel(
         email: String,
         password: String
     ): String? {
-        if (matricula.isBlank()) return "La matrícula es obligatoria"
-        if (nombre.isBlank()) return "El nombre es obligatorio"
-        if (email.isBlank()) return "El correo es obligatorio"
+        val app = getApplication<Application>()
+        if (matricula.isBlank()) return app.getString(R.string.register_error_matricula_required)
+        if (nombre.isBlank()) return app.getString(R.string.register_error_name_required)
+        if (email.isBlank()) return app.getString(R.string.register_error_email_required)
         if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            return "El formato del correo no es válido"
+            return app.getString(R.string.register_error_email_invalid)
         }
-        if (password.isBlank()) return "La contraseña es obligatoria"
-        if (password.length < 6) return "La contraseña debe tener al menos 6 caracteres"
+        if (password.isBlank()) return app.getString(R.string.register_error_password_required)
+        if (password.length < 6) return app.getString(R.string.register_error_password_length)
         return null
     }
 

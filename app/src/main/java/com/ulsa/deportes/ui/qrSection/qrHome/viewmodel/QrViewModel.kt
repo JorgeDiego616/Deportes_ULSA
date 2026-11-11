@@ -1,8 +1,10 @@
 package com.ulsa.deportes.ui.qrSection.qrHome.viewmodel
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.ulsa.deportes.R
 import com.ulsa.deportes.ui.qrSection.qrHome.model.CapacityStatus
 import com.ulsa.deportes.ui.qrSection.qrHome.model.CreateQrRequest
 import com.ulsa.deportes.ui.qrSection.qrHome.model.CreateQrResponse
@@ -20,7 +22,10 @@ sealed interface QrUiState {
     data object Idle : QrUiState
     data object Loading : QrUiState
     data class Success(val data: CreateQrResponse) : QrUiState
-    data class Error(val message: String) : QrUiState
+    data class Error(
+        @StringRes val messageRes: Int,
+        val formatArgs: List<Any> = emptyList()
+    ) : QrUiState
 }
 
 /**
@@ -45,11 +50,11 @@ class QrViewModel(private val api: QrApi) : ViewModel() {
                 _state.value = QrUiState.Success(response)
                 scheduleRefresh(request, response)
             } catch (e: IOException) {
-                _state.value = QrUiState.Error("No se pudo conectar. Verifica tu conexión e intenta de nuevo.")
+                _state.value = QrUiState.Error(R.string.error_no_connection)
             } catch (e: HttpException) {
-                _state.value = QrUiState.Error("Error del servidor (${e.code()}).")
+                _state.value = QrUiState.Error(R.string.error_server_code, listOf(e.code()))
             } catch (e: Exception) {
-                _state.value = QrUiState.Error(e.message ?: "Error al crear el QR")
+                _state.value = QrUiState.Error(R.string.error_creating_qr)
             }
         }
     }

@@ -3,6 +3,7 @@ package com.ulsa.deportes.ui.newsSection.newsHome.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.ulsa.deportes.R
 import com.ulsa.deportes.domain.repository.SportsRepository
 import com.ulsa.deportes.ui.homeSection.homeHome.model.NewsItem
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,8 +21,8 @@ class NewsViewModel(
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    private val _errorMessage = MutableStateFlow<String?>(null)
-    val errorMessage: StateFlow<String?> = _errorMessage.asStateFlow()
+    private val _errorMessageRes = MutableStateFlow<Int?>(null)
+    val errorMessageRes: StateFlow<Int?> = _errorMessageRes.asStateFlow()
 
     init {
         fetchNews()
@@ -30,12 +31,12 @@ class NewsViewModel(
     fun fetchNews() {
         viewModelScope.launch {
             _isLoading.value = true
-            _errorMessage.value = null
+            _errorMessageRes.value = null
             try {
                 val data = repository.getHomeData()
                 _newsList.value = data.news
             } catch (e: Exception) {
-                _errorMessage.value = "Error al cargar noticias: ${e.message}"
+                _errorMessageRes.value = R.string.news_error_loading
             } finally {
                 _isLoading.value = false
             }

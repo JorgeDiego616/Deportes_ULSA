@@ -18,6 +18,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -66,7 +67,7 @@ fun LoginScreenView(
             // ULSA Logo
             Image(
                 painter = painterResource(id = R.drawable.logo_ulsa),
-                contentDescription = "ULSA Logo",
+                contentDescription = stringResource(R.string.login_logo_desc),
                 modifier = Modifier
                     .size(120.dp)
                     .clip(RoundedCornerShape(16.dp)),
@@ -76,7 +77,7 @@ fun LoginScreenView(
             Spacer(modifier = Modifier.height(24.dp))
 
             Text(
-                text = "BIENVENIDO",
+                text = stringResource(R.string.login_welcome),
                 fontSize = 32.sp,
                 fontWeight = FontWeight.Black,
                 color = SportBlueStrong,
@@ -84,7 +85,7 @@ fun LoginScreenView(
             )
 
             Text(
-                text = "Inicia sesión para continuar",
+                text = stringResource(R.string.login_subtitle),
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold,
                 color = SportBlueStrong.copy(alpha = 0.8f),
@@ -100,7 +101,7 @@ fun LoginScreenView(
                     email = it
                     viewModel.clearError()
                 },
-                label = { Text("Correo Electrónico", fontWeight = FontWeight.SemiBold) },
+                label = { Text(stringResource(R.string.email_label), fontWeight = FontWeight.SemiBold) },
                 singleLine = true,
                 enabled = !uiState.isLoading,
                 modifier = Modifier.fillMaxWidth(),
@@ -125,7 +126,7 @@ fun LoginScreenView(
                     password = it
                     viewModel.clearError()
                 },
-                label = { Text("Contraseña", fontWeight = FontWeight.SemiBold) },
+                label = { Text(stringResource(R.string.password_label), fontWeight = FontWeight.SemiBold) },
                 singleLine = true,
                 enabled = !uiState.isLoading,
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -136,7 +137,11 @@ fun LoginScreenView(
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             imageVector = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                            contentDescription = if (passwordVisible) "Ocultar" else "Mostrar",
+                            contentDescription = if (passwordVisible) {
+                                stringResource(R.string.login_hide_password)
+                            } else {
+                                stringResource(R.string.login_show_password)
+                            },
                             tint = SportBlueStrong
                         )
                     }
@@ -191,7 +196,7 @@ fun LoginScreenView(
                     )
                 } else {
                     Text(
-                        text = "ENTRAR",
+                        text = stringResource(R.string.login_enter),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Black
                     )
@@ -202,7 +207,7 @@ fun LoginScreenView(
             if (uiState.isLoading) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Conectando al servidor deportivo...",
+                    text = stringResource(R.string.login_loading),
                     style = MaterialTheme.typography.bodySmall,
                     color = SportBlueStrong,
                     fontWeight = FontWeight.Bold,
@@ -218,12 +223,12 @@ fun LoginScreenView(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "¿No tienes cuenta? ",
+                    text = stringResource(R.string.login_no_account),
                     color = SportBlueStrong.copy(alpha = 0.8f),
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Registrarse",
+                    text = stringResource(R.string.login_register_link),
                     color = SportBlueStrong,
                     fontWeight = FontWeight.Black,
                     modifier = Modifier

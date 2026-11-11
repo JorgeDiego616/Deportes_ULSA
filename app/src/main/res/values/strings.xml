@@ -1,7 +1,295 @@
 <resources>
     <string name="app_name">UlsaApp</string>
-    <string name="login_image_desc">Imagen de inicio de sesión</string>
-    <string name="email_label">Correo electrónico</string>
-    <string name="password_label">Contraseña</string>
-    <string name="login_button">Iniciar sesión</string>
+
+    <!-- Common -->
+    <string name="common_error">Error</string>
+    <string name="common_retry">Retry</string>
+    <string name="common_loading">Loading information...</string>
+    <string name="common_back">Back</string>
+    <string name="common_delete">Delete</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="common_view">View</string>
+    <string name="common_edit">Edit</string>
+
+    <!-- Login -->
+    <string name="login_image_desc">Login image</string>
+    <string name="email_label">Email</string>
+    <string name="password_label">Password</string>
+    <string name="login_button">Log in</string>
+    <string name="login_welcome">WELCOME</string>
+    <string name="login_subtitle">Log in to continue</string>
+    <string name="login_enter">ENTER</string>
+    <string name="login_loading">Connecting to the sports server...</string>
+    <string name="login_logo_desc">ULSA logo</string>
+    <string name="login_show_password">Show password</string>
+    <string name="login_hide_password">Hide password</string>
+    <string name="login_toggle_password_visibility">Toggle password visibility</string>
+    <string name="login_welcome_exclamation">Welcome!</string>
+    <string name="login_error_empty_fields">Enter email and password</string>
+    <string name="login_error_invalid_credentials">Incorrect email or password</string>
+    <string name="login_error_disabled_account">This account is disabled</string>
+    <string name="login_error_unexpected_response">Unexpected server response.</string>
+    <string name="login_error_server_not_running">Could not connect to the server. Make sure it is running.</string>
+    <string name="login_error_no_connection">No connection. Check your network and try again.</string>
+    <string name="login_no_account">Don\'t have an account? </string>
+    <string name="login_register_link">Sign up</string>
+
+    <!-- Register -->
+    <string name="register_logo_desc">ULSA logo</string>
+    <string name="register_title">CREATE ACCOUNT</string>
+    <string name="register_subtitle">Sign up to access the sports community</string>
+    <string name="register_matricula_label">Student ID</string>
+    <string name="register_name_label">Full name</string>
+    <string name="register_email_label">Email</string>
+    <string name="register_password_label">Password</string>
+    <string name="register_show_password">Show password</string>
+    <string name="register_hide_password">Hide password</string>
+    <string name="register_button">SIGN UP</string>
+    <string name="register_loading">Creating your account...</string>
+    <string name="register_have_account">Already have an account? </string>
+    <string name="register_login_link">Log in</string>
+    <string name="register_error_matricula_required">Student ID is required</string>
+    <string name="register_error_name_required">Name is required</string>
+    <string name="register_error_email_required">Email is required</string>
+    <string name="register_error_email_invalid">Email format is invalid</string>
+    <string name="register_error_password_required">Password is required</string>
+    <string name="register_error_password_length">Password must be at least 6 characters</string>
+
+    <!-- Auth errors -->
+    <string name="auth_error_unexpected_response">Unexpected server response.</string>
+    <string name="auth_error_server_not_running">Could not connect to the server. Make sure it is running.</string>
+    <string name="auth_error_no_connection">No connection. Check your network and try again.</string>
+    <string name="auth_error_invalid_credentials">Incorrect email or password</string>
+    <string name="auth_error_disabled_account">This account is disabled</string>
+    <string name="auth_error_email_exists">An account with this email already exists</string>
+    <string name="auth_error_matricula_exists">This student ID is already registered</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_title_1">All Your Teams, One Place</string>
+    <string name="onboarding_desc_1">Follow the results, statistics and news of your favorite teams in real time.</string>
+    <string name="onboarding_title_2">Statistics That Matter</string>
+    <string name="onboarding_desc_2">Analyze key data, alignments and performance clearly and quickly.</string>
+    <string name="onboarding_title_3">Don\'t Miss Any Games</string>
+    <string name="onboarding_desc_3">Get instant alerts and experience the excitement of every game minute by minute.</string>
+    <string name="onboarding_back">Back</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_get_started">Get started</string>
+
+    <!-- Home -->
+    <string name="home_loading">Loading the ULSA sports center...</string>
+    <string name="home_season">SEASON 2026</string>
+    <string name="home_title">ULSA SPORTS</string>
+    <string name="home_recent_results">Recent Results</string>
+    <string name="home_recent_results_subtitle">Latest scores from ULSA teams</string>
+    <string name="home_news">News and Updates</string>
+    <string name="home_news_subtitle">Stay up to date with university sports</string>
+    <string name="home_upcoming_events">Upcoming Events</string>
+    <string name="home_upcoming_events_subtitle">Tournaments, matches, and announcements</string>
+    <string name="home_final">FINAL</string>
+    <string name="home_by_author">By %1$s</string>
+
+    <!-- News -->
+    <string name="news_title">ULSA Sports News</string>
+    <string name="news_retry">Retry</string>
+    <string name="news_error_loading">Error loading news</string>
+
+    <!-- Matches -->
+    <string name="matches_search_placeholder">Search by team, sport, or venue...</string>
+    <string name="matches_clear_search">Clear search</string>
+    <string name="matches_all_sports">All sports</string>
+    <string name="matches_status_all">All</string>
+    <string name="matches_status_live">Live</string>
+    <string name="matches_status_upcoming">Upcoming</string>
+    <string name="matches_status_finished">Finished</string>
+    <string name="matches_count">%1$d match(es)</string>
+    <string name="matches_sort_recent">Sort: Most recent</string>
+    <string name="matches_sort_upcoming">Sort: Nearest</string>
+    <string name="matches_sort_score_difference">Sort: Score diff.</string>
+    <string name="matches_sort_recent_option">Most recent</string>
+    <string name="matches_sort_upcoming_option">Nearest</string>
+    <string name="matches_sort_score_difference_option">Largest score difference</string>
+    <string name="matches_loading">Loading sports matches...</string>
+    <string name="matches_empty">No matches found with the selected filters 😢</string>
+    <string name="matches_clear_filters">Clear filters</string>
+    <string name="matches_status_live_upper">LIVE</string>
+    <string name="matches_status_upcoming_upper">UPCOMING</string>
+    <string name="matches_status_finished_upper">FINISHED</string>
+    <string name="matches_error_loading">Error loading matches</string>
+
+    <!-- Details -->
+    <string name="detail_match_title">Match Details</string>
+    <string name="detail_news_title">News</string>
+    <string name="detail_event_title">Event Details</string>
+    <string name="detail_team_stats_title">Team Statistics</string>
+    <string name="detail_back">Back</string>
+    <string name="detail_loading_match">Loading match...</string>
+    <string name="detail_match_not_found">Match not found or data unavailable.</string>
+    <string name="detail_match_summary">Match summary</string>
+    <string name="detail_loading_news">Loading news...</string>
+    <string name="detail_news_not_found">News not found or data unavailable.</string>
+    <string name="detail_by_author">By %1$s</string>
+    <string name="detail_loading_event">Loading event...</string>
+    <string name="detail_event_not_found">Event not found or data unavailable.</string>
+    <string name="detail_announcement">Announcement</string>
+    <string name="detail_rules">Rules and Regulations</string>
+    <string name="detail_loading_stats">Calculating statistics...</string>
+    <string name="detail_stats_not_found">Could not calculate team statistics.</string>
+    <string name="detail_performance_summary">Performance Summary</string>
+    <string name="detail_stat_played">Played</string>
+    <string name="detail_stat_wins">Wins</string>
+    <string name="detail_stat_draws">Draws</string>
+    <string name="detail_stat_losses">Losses</string>
+    <string name="detail_stat_goals_for">Goals For</string>
+    <string name="detail_stat_goals_against">Goals Against</string>
+    <string name="detail_stat_difference">Difference</string>
+    <string name="detail_team_matches">Team Matches (%1$d)</string>
+    <string name="detail_no_finished_matches">This team / representative has no finished matches in the current scores source.</string>
+
+    <!-- Teams -->
+    <string name="teams_title">ULSA Teams</string>
+    <string name="teams_back">Back</string>
+    <string name="teams_loading">Loading sports teams...</string>
+    <string name="teams_error_loading">Error loading teams</string>
+    <string name="teams_header">Representative Teams</string>
+    <string name="teams_header_subtitle">ULSA sports delegations and teams</string>
+    <string name="teams_coach">Coach: %1$s</string>
+    <string name="teams_info_placeholder">Team Information</string>
+
+    <!-- Profile -->
+    <string name="profile_personal_info">Personal Information</string>
+    <string name="profile_your_events">Your events (%1$d/3)</string>
+    <string name="profile_open_event">Open event</string>
+    <string name="profile_delete_event">Delete event</string>
+    <string name="profile_create_event">Create Event</string>
+    <string name="profile_logout">Log out</string>
+    <string name="profile_delete_dialog_title">Delete event?</string>
+    <string name="profile_delete_dialog_message">Are you sure you want to delete the event \'%1$s\'? Its associated QR code will also be deleted.</string>
+    <string name="profile_delete">Delete</string>
+    <string name="profile_cancel">Cancel</string>
+
+    <!-- Navigation -->
+    <string name="nav_onboarding">Onboarding</string>
+    <string name="nav_login">Login</string>
+    <string name="nav_api">API</string>
+    <string name="nav_teams">Teams</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_news">News</string>
+    <string name="nav_matches">Matches</string>
+    <string name="nav_profile">Profile</string>
+    <string name="nav_event_not_found">Event not found</string>
+
+    <!-- QR / Events -->
+    <string name="qr_title_edit">Edit Event</string>
+    <string name="qr_title_created">Event Created</string>
+    <string name="qr_title_view">View Event</string>
+    <string name="qr_title_your_events">Your Events (%1$d/3)</string>
+    <string name="qr_title_create">Create Event</string>
+    <string name="qr_cd_cancel_edit">Cancel editing</string>
+    <string name="qr_cd_back_to_form">Back to form</string>
+    <string name="qr_cd_back_to_list">Back to list</string>
+    <string name="qr_cd_back">Back</string>
+    <string name="qr_cd_back_to_profile">Back to profile</string>
+    <string name="qr_toast_update_error">Error updating the event.</string>
+    <string name="qr_toast_limit_reached">Limit reached: 3 events are already saved. Delete one first.</string>
+    <string name="qr_toast_save_error">Error saving or limit reached (3/3). No changes were applied.</string>
+    <string name="qr_toast_limit_reached_create">Limit reached (3/3 events). You must delete an event before creating another.</string>
+    <string name="qr_cd_event">Event</string>
+    <string name="qr_cd_new_event">New event</string>
+    <string name="qr_update_event">Update Event</string>
+    <string name="qr_save_event">Save Event</string>
+    <string name="qr_create_another_event">Create another Event (%1$d/3)</string>
+    <string name="qr_limit_reached_delete">Limit reached (3/3) - Delete one</string>
+    <string name="qr_generate_event">Generate Event</string>
+    <string name="qr_section_organizer">Organizer Details</string>
+    <string name="qr_section_event">Event Details</string>
+    <string name="qr_organizer_name">Organizer name</string>
+    <string name="qr_organizer_id">Student ID / ID</string>
+    <string name="qr_organizer_faculty">Faculty / Department</string>
+    <string name="qr_event_title">Event title</string>
+    <string name="qr_event_type">Event type</string>
+    <string name="qr_venue">Venue</string>
+    <string name="qr_event_date">Event date (dd/MM/yyyy)</string>
+    <string name="qr_start_time">Start time (HH:mm)</string>
+    <string name="qr_end_time">End time (HH:mm)</string>
+    <string name="qr_capacity">Capacity (spots)</string>
+    <string name="qr_validation_incomplete">Complete all fields to enable QR creation</string>
+    <string name="qr_validation_complete">All fields complete. Press the button to generate your access pass.</string>
+    <string name="qr_sold_out">Sold out</string>
+    <string name="qr_spots_available">Available spots: %1$d / %2$d</string>
+    <string name="qr_section_event_title">Event</string>
+    <string name="qr_cd_event_qr">Event QR</string>
+    <string name="qr_entry_gate">Gate: %1$s</string>
+    <string name="qr_status">Status: %1$s</string>
+    <string name="qr_expired">Expired</string>
+    <string name="qr_status_active">Active</string>
+    <string name="qr_status_used">Used</string>
+    <string name="qr_status_cancelled">Cancelled</string>
+    <string name="qr_events_saved_count">You have %1$d saved event(s)</string>
+    <string name="qr_event_number_title">Event #%1$d - %2$s</string>
+    <string name="qr_section_your_event">Your Event</string>
+    <string name="qr_save_hint">Press \'Save Event\' to save it and return to the profile.</string>
+    <string name="qr_delete_all">Delete all</string>
+    <string name="qr_limit_dialog_title">Event limit reached (3/3)</string>
+    <string name="qr_limit_dialog_message">Select an event to delete and create a new one:</string>
+    <string name="qr_event_number">Event #%1$d: %2$s</string>
+    <string name="qr_delete_dialog_title">Delete event?</string>
+    <string name="qr_delete_dialog_message">Are you sure you want to delete the event \'%1$s\'? Its associated QR code will also be deleted.</string>
+    <string name="qr_edit_dialog_title">What do you want to do?</string>
+    <string name="qr_edit_dialog_message">Choose an option for your generated QR code.</string>
+    <string name="qr_delete_qr">Delete QR</string>
+    <string name="qr_edit_qr">Edit QR</string>
+    <string name="qr_cd_edit">Edit</string>
+    <string name="qr_default_event_title">ULSA Classic 2026</string>
+    <string name="qr_default_organizer_name">Jorge Chaparro</string>
+    <string name="qr_default_organizer_id">14446</string>
+    <string name="qr_default_faculty">Engineering</string>
+    <string name="qr_default_venue">La Salle Stadium</string>
+    <string name="qr_category_sports">Sports</string>
+    <string name="qr_category_academic">Academic</string>
+    <string name="qr_category_cultural">Cultural / Artistic</string>
+    <string-array name="qr_venues">
+        <item>La Salle Stadium</item>
+        <item>La Salle Gym</item>
+        <item>ULSA Auditorium</item>
+        <item>ULSA Central Plaza / Esplanade</item>
+        <item>Soccer Field</item>
+        <item>Basketball Court</item>
+        <item>Multipurpose Room</item>
+        <item>Cultural Area</item>
+    </string-array>
+
+    <!-- Registration -->
+    <string name="registration_title">Register for %1$s</string>
+    <string name="registration_back">Back</string>
+    <string name="registration_button">Register</string>
+    <string name="registration_cd_register">Register</string>
+    <string name="registration_event">Event</string>
+    <string name="registration_spots">Spots: %1$d</string>
+    <string name="registration_form_title">Attendee Registration</string>
+    <string name="registration_form_subtitle">Complete your details to generate your QR ticket</string>
+    <string name="registration_name">Full name</string>
+    <string name="registration_email">Email</string>
+    <string name="registration_validation">Complete all fields correctly (email must contain @)</string>
+    <string name="registration_ticket_info_title">Your QR ticket will be generated when you register</string>
+    <string name="registration_ticket_info_desc">You will receive by email: event name, venue, date, time, spots, and the QR as your entry ticket</string>
+    <string name="registration_success_title">Registered!</string>
+    <string name="registration_success_email">An email has been sent to %1$s with your QR ticket</string>
+    <string name="registration_email_includes">The email includes:</string>
+    <string name="registration_bullet_event">• Event name: %1$s</string>
+    <string name="registration_bullet_venue">• Venue: %1$s</string>
+    <string name="registration_bullet_date">• Date: %1$s</string>
+    <string name="registration_bullet_time">• Time: %1$s</string>
+    <string name="registration_bullet_spots">• Spots: %1$d</string>
+    <string name="registration_bullet_qr">• Entry QR ticket (token: %1$s...)</string>
+    <string name="registration_back_to_profile">Back to Profile</string>
+    <string name="registration_view_ticket">View Ticket</string>
+    <string name="registration_cd_event">Event</string>
+    <string name="registration_cd_success">Success</string>
+
+    <!-- ViewModel errors -->
+    <string name="error_no_connection">Could not connect. Check your connection and try again.</string>
+    <string name="error_server">Server error.</string>
+    <string name="error_server_code">Server error (%1$d).</string>
+    <string name="error_loading_home">Error loading the sports center</string>
+    <string name="error_creating_qr">Error creating the QR</string>
 </resources>

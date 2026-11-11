@@ -21,18 +21,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.ulsa.deportes.R
 import com.ulsa.deportes.data.repository.SportsRepositoryImpl
 import com.ulsa.deportes.ui.components.ErrorView
 import com.ulsa.deportes.ui.components.LoadingView
 import com.ulsa.deportes.ui.components.SportCard
 import com.ulsa.deportes.ui.components.SportHeader
-import com.ulsa.deportes.ui.details.util.formatLongSpanishDate
+import com.ulsa.deportes.ui.details.util.formatLongDate
 import com.ulsa.deportes.ui.details.viewmodel.EventDetailViewModel
 import com.ulsa.deportes.ui.details.viewmodel.MatchDetailViewModel
 import com.ulsa.deportes.ui.details.viewmodel.NewsDetailViewModel
@@ -55,10 +57,10 @@ fun MatchDetailView(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Detalle de Partido", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.detail_match_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.detail_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -72,8 +74,8 @@ fun MatchDetailView(
                 .background(MaterialTheme.colorScheme.background)
         ) {
             when {
-                isLoading -> LoadingView(message = "Cargando partido...")
-                match == null -> ErrorView(message = "Partido no encontrado o datos no disponibles.")
+                isLoading -> LoadingView(message = stringResource(R.string.detail_loading_match))
+                match == null -> ErrorView(message = stringResource(R.string.detail_match_not_found))
                 else -> {
                     val m = match!!
                     Column(
@@ -173,14 +175,14 @@ fun MatchDetailView(
                                 Icon(Icons.Default.CalendarMonth, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                                 Spacer(Modifier.width(8.dp))
                                 Text(
-                                    text = formatLongSpanishDate(m.playedAt),
+                                    text = formatLongDate(m.playedAt),
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.SemiBold
                                 )
                             }
                             Spacer(Modifier.height(12.dp))
                             Text(
-                                text = "Resumen del encuentro",
+                                text = stringResource(R.string.detail_match_summary),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
@@ -215,10 +217,10 @@ fun NewsDetailView(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Noticia", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.detail_news_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.detail_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -232,8 +234,8 @@ fun NewsDetailView(
                 .background(MaterialTheme.colorScheme.background)
         ) {
             when {
-                isLoading -> LoadingView(message = "Cargando noticia...")
-                news == null -> ErrorView(message = "Noticia no encontrada o datos no disponibles.")
+                isLoading -> LoadingView(message = stringResource(R.string.detail_loading_news))
+                news == null -> ErrorView(message = stringResource(R.string.detail_news_not_found))
                 else -> {
                     val n = news!!
                     Column(
@@ -272,13 +274,13 @@ fun NewsDetailView(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = "Por ${n.author}",
+                                    text = stringResource(R.string.detail_by_author, n.author),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = formatLongSpanishDate(n.publishedAt),
+                                    text = formatLongDate(n.publishedAt),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -315,10 +317,10 @@ fun EventDetailView(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Detalle de Evento", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.detail_event_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.detail_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -332,8 +334,8 @@ fun EventDetailView(
                 .background(MaterialTheme.colorScheme.background)
         ) {
             when {
-                isLoading -> LoadingView(message = "Cargando evento...")
-                event == null -> ErrorView(message = "Evento no encontrado o datos no disponibles.")
+                isLoading -> LoadingView(message = stringResource(R.string.detail_loading_event))
+                event == null -> ErrorView(message = stringResource(R.string.detail_event_not_found))
                 else -> {
                     val ev = event!!
                     Column(
@@ -382,14 +384,14 @@ fun EventDetailView(
                                 Icon(Icons.Default.CalendarMonth, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
                                 Spacer(Modifier.width(6.dp))
                                 Text(
-                                    text = "${formatLongSpanishDate(ev.startDate)} - ${formatLongSpanishDate(ev.endDate)}",
+                                    text = "${formatLongDate(ev.startDate)} - ${formatLongDate(ev.endDate)}",
                                     style = MaterialTheme.typography.bodyMedium,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                             HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
                             Text(
-                                text = "Convocatoria",
+                                text = stringResource(R.string.detail_announcement),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
@@ -401,7 +403,7 @@ fun EventDetailView(
                             )
                             Spacer(Modifier.height(4.dp))
                             Text(
-                                text = "Reglas y Normativa",
+                                text = stringResource(R.string.detail_rules),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
@@ -437,10 +439,10 @@ fun TeamDetailView(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Estadísticas del Equipo", fontWeight = FontWeight.Bold) },
+                title = { Text(stringResource(R.string.detail_team_stats_title), fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.detail_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -454,8 +456,8 @@ fun TeamDetailView(
                 .background(MaterialTheme.colorScheme.background)
         ) {
             when {
-                isLoading -> LoadingView(message = "Calculando estadísticas...")
-                stats == null -> ErrorView(message = "No se pudieron calcular las estadísticas del equipo.")
+                isLoading -> LoadingView(message = stringResource(R.string.detail_loading_stats))
+                stats == null -> ErrorView(message = stringResource(R.string.detail_stats_not_found))
                 else -> {
                     val st = stats!!
                     LazyColumn(
@@ -465,7 +467,7 @@ fun TeamDetailView(
                         item {
                             SportCard(modifier = Modifier.fillMaxWidth()) {
                                 Text(
-                                    text = "Resumen de Rendimiento",
+                                    text = stringResource(R.string.detail_performance_summary),
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.primary
@@ -475,10 +477,10 @@ fun TeamDetailView(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceAround
                                 ) {
-                                    StatItem(label = "Jugados", value = st.matchesPlayed.toString())
-                                    StatItem(label = "Ganados", value = st.wins.toString(), color = Color(0xFF1F7A4D))
-                                    StatItem(label = "Empatados", value = st.draws.toString())
-                                    StatItem(label = "Perdidos", value = st.losses.toString(), color = Color(0xFFD32F2F))
+                                    StatItem(label = stringResource(R.string.detail_stat_played), value = st.matchesPlayed.toString())
+                                    StatItem(label = stringResource(R.string.detail_stat_wins), value = st.wins.toString(), color = Color(0xFF1F7A4D))
+                                    StatItem(label = stringResource(R.string.detail_stat_draws), value = st.draws.toString())
+                                    StatItem(label = stringResource(R.string.detail_stat_losses), value = st.losses.toString(), color = Color(0xFFD32F2F))
                                 }
                                 Spacer(Modifier.height(16.dp))
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f))
@@ -487,22 +489,22 @@ fun TeamDetailView(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceAround
                                 ) {
-                                    StatItem(label = "Goles Favor", value = st.goalsFor.toString(), color = MaterialTheme.colorScheme.primary)
-                                    StatItem(label = "Goles Contra", value = st.goalsAgainst.toString(), color = MaterialTheme.colorScheme.error)
-                                    StatItem(label = "Diferencia", value = (st.goalsFor - st.goalsAgainst).toString())
+                                    StatItem(label = stringResource(R.string.detail_stat_goals_for), value = st.goalsFor.toString(), color = MaterialTheme.colorScheme.primary)
+                                    StatItem(label = stringResource(R.string.detail_stat_goals_against), value = st.goalsAgainst.toString(), color = MaterialTheme.colorScheme.error)
+                                    StatItem(label = stringResource(R.string.detail_stat_difference), value = (st.goalsFor - st.goalsAgainst).toString())
                                 }
                             }
                         }
 
                         item {
-                            SportHeader(title = "Partidos del Equipo (${st.matches.size})")
+                            SportHeader(title = stringResource(R.string.detail_team_matches, st.matches.size))
                         }
 
                         if (st.matches.isEmpty()) {
                             item {
                                 SportCard(modifier = Modifier.fillMaxWidth()) {
                                     Text(
-                                        text = "Este equipo / representante no registra partidos finalizados en la fuente de marcadores actual.",
+                                        text = stringResource(R.string.detail_no_finished_matches),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         textAlign = TextAlign.Center,

@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -65,7 +66,7 @@ fun RegisterScreenView(
             // ULSA Logo
             Image(
                 painter = painterResource(id = R.drawable.logo_ulsa),
-                contentDescription = "ULSA Logo",
+                contentDescription = stringResource(R.string.register_logo_desc),
                 modifier = Modifier
                     .size(100.dp)
                     .clip(RoundedCornerShape(16.dp)),
@@ -75,7 +76,7 @@ fun RegisterScreenView(
             Spacer(modifier = Modifier.height(16.dp))
 
             Text(
-                text = "CREAR CUENTA",
+                text = stringResource(R.string.register_title),
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Black,
                 color = SportBlueStrong,
@@ -83,7 +84,7 @@ fun RegisterScreenView(
             )
 
             Text(
-                text = "Regístrate para acceder a la comunidad deportiva",
+                text = stringResource(R.string.register_subtitle),
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
                 color = SportBlueStrong.copy(alpha = 0.8f),
@@ -99,7 +100,7 @@ fun RegisterScreenView(
                     matricula = it
                     viewModel.clearFieldError("matricula")
                 },
-                label = { Text("Matrícula", fontWeight = FontWeight.SemiBold) },
+                label = { Text(stringResource(R.string.register_matricula_label), fontWeight = FontWeight.SemiBold) },
                 singleLine = true,
                 enabled = !uiState.isLoading,
                 modifier = Modifier.fillMaxWidth(),
@@ -129,7 +130,7 @@ fun RegisterScreenView(
                     nombre = it
                     viewModel.clearFieldError("nombre")
                 },
-                label = { Text("Nombre completo", fontWeight = FontWeight.SemiBold) },
+                label = { Text(stringResource(R.string.register_name_label), fontWeight = FontWeight.SemiBold) },
                 singleLine = true,
                 enabled = !uiState.isLoading,
                 modifier = Modifier.fillMaxWidth(),
@@ -159,7 +160,7 @@ fun RegisterScreenView(
                     email = it
                     viewModel.clearFieldError("email")
                 },
-                label = { Text("Correo Electrónico", fontWeight = FontWeight.SemiBold) },
+                label = { Text(stringResource(R.string.register_email_label), fontWeight = FontWeight.SemiBold) },
                 singleLine = true,
                 enabled = !uiState.isLoading,
                 modifier = Modifier.fillMaxWidth(),
@@ -189,7 +190,7 @@ fun RegisterScreenView(
                     password = it
                     viewModel.clearFieldError("password")
                 },
-                label = { Text("Contraseña", fontWeight = FontWeight.SemiBold) },
+                label = { Text(stringResource(R.string.register_password_label), fontWeight = FontWeight.SemiBold) },
                 singleLine = true,
                 enabled = !uiState.isLoading,
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -200,7 +201,11 @@ fun RegisterScreenView(
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             imageVector = if (passwordVisible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
-                            contentDescription = if (passwordVisible) "Ocultar" else "Mostrar",
+                            contentDescription = if (passwordVisible) {
+                                stringResource(R.string.register_hide_password)
+                            } else {
+                                stringResource(R.string.register_show_password)
+                            },
                             tint = SportBlueStrong
                         )
                     }
@@ -260,7 +265,7 @@ fun RegisterScreenView(
                     )
                 } else {
                     Text(
-                        text = "REGISTRARSE",
+                        text = stringResource(R.string.register_button),
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Black
                     )
@@ -271,7 +276,7 @@ fun RegisterScreenView(
             if (uiState.isLoading) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Creando tu cuenta...",
+                    text = stringResource(R.string.register_loading),
                     style = MaterialTheme.typography.bodySmall,
                     color = SportBlueStrong,
                     fontWeight = FontWeight.Bold,
@@ -287,12 +292,12 @@ fun RegisterScreenView(
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "¿Ya tienes cuenta? ",
+                    text = stringResource(R.string.register_have_account),
                     color = SportBlueStrong.copy(alpha = 0.8f),
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Iniciar sesión",
+                    text = stringResource(R.string.register_login_link),
                     color = SportBlueStrong,
                     fontWeight = FontWeight.Black,
                     modifier = Modifier

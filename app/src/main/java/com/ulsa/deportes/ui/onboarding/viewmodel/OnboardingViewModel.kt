@@ -1,6 +1,9 @@
 package com.ulsa.deportes.ui.onboarding.viewmodel
 
 import android.app.Application
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
+import androidx.compose.ui.res.stringArrayResource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.ulsa.deportes.R
@@ -12,18 +15,18 @@ class OnboardingViewModel(private val onboardingPreferences: OnboardingPreferenc
 
     val pages = listOf(
         OnboardingPage(
-            title = "All Your Teams, One Place",
-            description = "Sigue los resultados, estadísticas y noticias de tus equipos favoritos en tiempo real.",
+            title = R.string.onboarding_title_1,
+            description = R.string.onboarding_desc_1,
             imageRes = R.drawable.onboarding_1
         ),
         OnboardingPage(
-            title = "Statistics that matter",
-            description = "Analiza datos clave, alineaciones y rendimientos de forma clara y rápida.",
+            title = R.string.onboarding_title_2,
+            description = R.string.onboarding_desc_2,
             imageRes = R.drawable.onboarding_2
         ),
         OnboardingPage(
-            title = "Don't miss any games",
-            description = "Recibe alertas al instante y vive la emoción de cada partido minuto a minuto.",
+            title = R.string.onboarding_title_3,
+            description = R.string.onboarding_desc_3,
             imageRes = R.drawable.onboarding_3
         )
     )

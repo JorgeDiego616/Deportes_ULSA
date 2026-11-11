@@ -66,6 +66,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringArrayResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 
 import androidx.compose.ui.text.style.TextAlign
@@ -73,6 +75,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ulsa.deportes.R
 import com.ulsa.deportes.ui.qrSection.qrHome.data.EventPreferences
 import com.ulsa.deportes.ui.qrSection.qrHome.data.QrPreferences
 import com.ulsa.deportes.ui.qrSection.qrHome.model.CreateQrResponse
@@ -105,9 +108,9 @@ fun QrScreenView(
         organizerName = eventPreferences.getOrganizerName(),
         organizerId = eventPreferences.getOrganizerId(),
         organizerFaculty = eventPreferences.getOrganizerFaculty(),
-        title = "Clásico ULSA 2026",
+        title = context.getString(R.string.qr_default_event_title),
         category = EventCategory.DEPORTIVO,
-        venue = "Estadio La Salle",
+        venue = context.getString(R.string.qr_default_venue),
         date = java.time.LocalDate.now().plusDays(7),
         startTime = java.time.LocalTime.of(18, 0),
         endTime = java.time.LocalTime.of(20, 0),
@@ -148,16 +151,7 @@ fun QrScreenView(
     var categoryExpanded by remember { mutableStateOf(false) }
 
     // Opciones para Sedes (basadas en infraestructura ULSA)
-    val eventVenues = listOf(
-        "Estadio La Salle",
-        "Gimnasio La Salle",
-        "Auditorio ULSA",
-        "Plaza Central / Explanada ULSA",
-        "Cancha de Fútbol",
-        "Cancha de Básquetbol",
-        "Salón de Usos Múltiples",
-        "Área Cultural"
-    )
+    val eventVenues = stringArrayResource(R.array.qr_venues).toList()
     var venueExpanded by remember { mutableStateOf(false) }
 
     // Validación del formulario - todos los campos requeridos
@@ -210,7 +204,7 @@ fun QrScreenView(
                 } else {
                     eventPreferences.restoreList(eventsBefore)
                     qrPreferences.restoreList(qrsBefore)
-                    android.widget.Toast.makeText(context, "Error al actualizar el evento.", android.widget.Toast.LENGTH_LONG).show()
+                    android.widget.Toast.makeText(context, context.getString(R.string.qr_toast_update_error), android.widget.Toast.LENGTH_LONG).show()
                 }
             } else {
                 qrCreated = true
@@ -252,9 +246,9 @@ fun QrScreenView(
             val category = EventCategory.values().find { it.name == eventSummary.category } ?: EventCategory.DEPORTIVO
             
             form = EventFormData(
-                organizerName = userSummary?.studentName ?: "Jorge Chaparro",
-                organizerId = userSummary?.studentId ?: "14446",
-                organizerFaculty = userSummary?.faculty ?: "Ingeniería",
+                organizerName = userSummary?.studentName ?: context.getString(R.string.qr_default_organizer_name),
+                organizerId = userSummary?.studentId ?: context.getString(R.string.qr_default_organizer_id),
+                organizerFaculty = userSummary?.faculty ?: context.getString(R.string.qr_default_faculty),
                 title = eventSummary.title,
                 category = category,
                 venue = eventSummary.venue,
@@ -282,11 +276,11 @@ fun QrScreenView(
                 title = { 
                     Text(
                         when {
-                            qrCreated && editingEvent != null -> "Editar Evento"
-                            qrCreated -> "Evento Creado"
-                            selectedQrForView != null -> "Ver Evento"
-                            hasAnyQr -> "Tus Eventos (${existingEventList.size}/3)"
-                            else -> "Crear Evento"
+                            qrCreated && editingEvent != null -> stringResource(R.string.qr_title_edit)
+                            qrCreated -> stringResource(R.string.qr_title_created)
+                            selectedQrForView != null -> stringResource(R.string.qr_title_view)
+                            hasAnyQr -> stringResource(R.string.qr_title_your_events, existingEventList.size)
+                            else -> stringResource(R.string.qr_title_create)
                         }, 
                         fontWeight = FontWeight.SemiBold
                     ) 
@@ -312,10 +306,10 @@ fun QrScreenView(
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = when {
-                                qrCreated && editingEvent != null -> "Cancelar edición"
-                                qrCreated -> "Volver al formulario"
-                                selectedQrForView != null -> "Volver a la lista"
-                                else -> "Regresar"
+                                qrCreated && editingEvent != null -> stringResource(R.string.qr_cd_cancel_edit)
+                                qrCreated -> stringResource(R.string.qr_cd_back_to_form)
+                                selectedQrForView != null -> stringResource(R.string.qr_cd_back_to_list)
+                                else -> stringResource(R.string.qr_cd_back)
                             }
                         )
                     }
@@ -323,7 +317,7 @@ fun QrScreenView(
                 actions = {
                     if (qrCreated || hasAnyQr || selectedQrForView != null) {
                         androidx.compose.material3.IconButton(onClick = { onBack() }) {
-                            Icon(Icons.Filled.Home, contentDescription = "Volver al perfil")
+                            Icon(Icons.Filled.Home, contentDescription = stringResource(R.string.qr_cd_back_to_profile))
                         }
                     }
                 },
@@ -345,7 +339,7 @@ fun QrScreenView(
                             if (!eventPreferences.canSave(targetId) || !qrPreferences.canSave(targetId)) {
                                 android.widget.Toast.makeText(
                                     context,
-                                    "Límite alcanzado: Ya existen 3 eventos guardados. Elimina uno primero.",
+                                    context.getString(R.string.qr_toast_limit_reached),
                                     android.widget.Toast.LENGTH_LONG
                                 ).show()
                                 return@Button
@@ -391,7 +385,7 @@ fun QrScreenView(
                                 qrPreferences.restoreList(qrsBefore)
                                 android.widget.Toast.makeText(
                                     context,
-                                    "Error al guardar o límite alcanzado (3/3). No se aplicaron cambios.",
+                                    context.getString(R.string.qr_toast_save_error),
                                     android.widget.Toast.LENGTH_LONG
                                 ).show()
                             }
@@ -411,9 +405,13 @@ fun QrScreenView(
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Filled.Event, contentDescription = "Evento")
+                            Icon(Icons.Filled.Event, contentDescription = stringResource(R.string.qr_cd_event))
                             Spacer(Modifier.width(8.dp))
-                            Text(if (editingEvent != null) "Actualizar Evento" else "Guardar Evento", fontWeight = FontWeight.Bold)
+                            Text(
+                                if (editingEvent != null) stringResource(R.string.qr_update_event)
+                                else stringResource(R.string.qr_save_event),
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                 }
@@ -425,9 +423,9 @@ fun QrScreenView(
                                     organizerName = eventPreferences.getOrganizerName(form.organizerName),
                                     organizerId = eventPreferences.getOrganizerId(form.organizerId),
                                     organizerFaculty = eventPreferences.getOrganizerFaculty(form.organizerFaculty),
-                                    title = "Clásico ULSA 2026",
+                                    title = context.getString(R.string.qr_default_event_title),
                                     category = EventCategory.DEPORTIVO,
-                                    venue = "Estadio La Salle",
+                                    venue = context.getString(R.string.qr_default_venue),
                                     date = java.time.LocalDate.now().plusDays(7),
                                     startTime = java.time.LocalTime.of(18, 0),
                                     endTime = java.time.LocalTime.of(20, 0),
@@ -454,9 +452,9 @@ fun QrScreenView(
                                 horizontalArrangement = Arrangement.Center,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(Icons.Filled.Event, contentDescription = "Nuevo Evento")
+                                Icon(Icons.Filled.Event, contentDescription = stringResource(R.string.qr_cd_new_event))
                                 Spacer(Modifier.width(8.dp))
-                                Text("Crear otro Evento (${existingEventList.size}/3)", fontWeight = FontWeight.Bold)
+                                Text(stringResource(R.string.qr_create_another_event, existingEventList.size), fontWeight = FontWeight.Bold)
                             }
                         }
                     } else {
@@ -473,7 +471,7 @@ fun QrScreenView(
                             ),
                             shape = MaterialTheme.shapes.medium
                         ) {
-                            Text("Límite alcanzado (3/3) - Eliminar uno", fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.qr_limit_reached_delete), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -483,7 +481,7 @@ fun QrScreenView(
                             if (eventPreferences.isAtMaxLimit() || qrPreferences.isAtMaxLimit() || existingEventList.size >= 3) {
                                 android.widget.Toast.makeText(
                                     context,
-                                    "Límite alcanzado (3/3 eventos). Debes eliminar un evento antes de crear otro.",
+                                    context.getString(R.string.qr_toast_limit_reached_create),
                                     android.widget.Toast.LENGTH_LONG
                                 ).show()
                             } else if (isFormValid && state !is QrUiState.Loading) {
@@ -523,7 +521,11 @@ fun QrScreenView(
                         if (currentState is QrUiState.Loading) {
                             CircularProgressIndicator(color = Color.White, modifier = Modifier.size(24.dp))
                         } else {
-                            Text(if (editingEvent != null) "Actualizar Evento" else "Generar Evento", fontWeight = FontWeight.Bold)
+                            Text(
+                                if (editingEvent != null) stringResource(R.string.qr_update_event)
+                                else stringResource(R.string.qr_generate_event),
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     }
                 }
@@ -544,12 +546,12 @@ fun QrScreenView(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 // Sección 1: Datos del Administrador
-                SectionCard(title = "Datos del Organizador") {
+                SectionCard(title = stringResource(R.string.qr_section_organizer)) {
                     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         OutlinedTextField(
                             value = form.organizerName,
                             onValueChange = { form = form.copy(organizerName = it) },
-                            label = { Text("Nombre del organizador") },
+                            label = { Text(stringResource(R.string.qr_organizer_name)) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
@@ -563,7 +565,7 @@ fun QrScreenView(
                         OutlinedTextField(
                             value = form.organizerId,
                             onValueChange = { form = form.copy(organizerId = it) },
-                            label = { Text("Matrícula / ID") },
+                            label = { Text(stringResource(R.string.qr_organizer_id)) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
@@ -577,7 +579,7 @@ fun QrScreenView(
                         OutlinedTextField(
                             value = form.organizerFaculty,
                             onValueChange = { form = form.copy(organizerFaculty = it) },
-                            label = { Text("Facultad / Departamento") },
+                            label = { Text(stringResource(R.string.qr_organizer_faculty)) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
@@ -591,12 +593,12 @@ fun QrScreenView(
                 }
 
                 // Sección 2: Datos del Evento
-                SectionCard(title = "Datos del Evento") {
+                SectionCard(title = stringResource(R.string.qr_section_event)) {
                     Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         OutlinedTextField(
                             value = form.title,
                             onValueChange = { form = form.copy(title = it) },
-                            label = { Text("Título del evento") },
+                            label = { Text(stringResource(R.string.qr_event_title)) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
@@ -619,11 +621,11 @@ fun QrScreenView(
                                     .clickable { categoryExpanded = !categoryExpanded }
                             ) {
                                 OutlinedTextField(
-                                    value = form.category?.name ?: "",
+                                    value = form.category?.displayName() ?: "",
                                     onValueChange = {},
                                     readOnly = true,
                                     enabled = false,
-                                    label = { Text("Tipo de evento") },
+                                    label = { Text(stringResource(R.string.qr_event_type)) },
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = categoryExpanded) },
                                     modifier = Modifier
                                         .menuAnchor()
@@ -642,7 +644,7 @@ fun QrScreenView(
                             ) {
                                 eventCategories.forEach { option ->
                                     DropdownMenuItem(
-                                        text = { Text(option.name) },
+                                        text = { Text(option.displayName()) },
                                         onClick = {
                                             form = form.copy(category = option)
                                             categoryExpanded = false
@@ -668,7 +670,7 @@ fun QrScreenView(
                                     onValueChange = {},
                                     readOnly = true,
                                     enabled = false,
-                                    label = { Text("Sede") },
+                                    label = { Text(stringResource(R.string.qr_venue)) },
                                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = venueExpanded) },
                                     modifier = Modifier
                                         .menuAnchor()
@@ -720,7 +722,7 @@ fun QrScreenView(
                                     }
                                 }
                             },
-                            label = { Text("Fecha del evento (dd/MM/yyyy)") },
+                            label = { Text(stringResource(R.string.qr_event_date)) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
@@ -754,7 +756,7 @@ fun QrScreenView(
                                     }
                                 }
                             },
-                            label = { Text("Hora de inicio (HH:mm)") },
+                            label = { Text(stringResource(R.string.qr_start_time)) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
@@ -788,7 +790,7 @@ fun QrScreenView(
                                     }
                                 }
                             },
-                            label = { Text("Hora de fin (HH:mm)") },
+                            label = { Text(stringResource(R.string.qr_end_time)) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
@@ -811,7 +813,7 @@ fun QrScreenView(
                                     form = form.copy(capacity = parsed)
                                 }
                             },
-                            label = { Text("Capacidad (cupos)") },
+                            label = { Text(stringResource(R.string.qr_capacity)) },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth(),
                             colors = OutlinedTextFieldDefaults.colors(
@@ -827,7 +829,7 @@ fun QrScreenView(
                 // Mensaje de validación
                 if (!isFormValid) {
                     Text(
-                        "Completa todos los campos para habilitar la creación del QR",
+                        stringResource(R.string.qr_validation_incomplete),
                         textAlign = TextAlign.Center,
                         color = Color(0xFFD32F2F),
                         style = MaterialTheme.typography.bodySmall,
@@ -835,7 +837,7 @@ fun QrScreenView(
                     )
                 } else {
                     Text(
-                        "Todos los campos completos. Presiona el botón para generar tu pase de acceso.",
+                        stringResource(R.string.qr_validation_complete),
                         textAlign = TextAlign.Center,
                         color = Color(0xFF1F7A4D),
                         style = MaterialTheme.typography.bodySmall,
@@ -845,8 +847,8 @@ fun QrScreenView(
 
                 capacity?.let {
                     Text(
-                        if (it.isSoldOut) "Cupo agotado"
-                        else "Lugares disponibles: ${it.spotsRemaining} / ${it.capacityLimit}",
+                        if (it.isSoldOut) stringResource(R.string.qr_sold_out)
+                        else stringResource(R.string.qr_spots_available, it.spotsRemaining, it.capacityLimit),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = if (it.isSoldOut) Color(0xFFD32F2F) else Color(0xFF1F7A4D)
@@ -869,7 +871,7 @@ fun QrScreenView(
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     val data = selectedQrForView!!
-                    SectionCard(title = "Evento") {
+                    SectionCard(title = stringResource(R.string.qr_section_event_title)) {
                         Column(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalAlignment = Alignment.CenterHorizontally,
@@ -882,7 +884,7 @@ fun QrScreenView(
                             bitmap?.let {
                                 Image(
                                     bitmap = it.asImageBitmap(),
-                                    contentDescription = "QR del Evento",
+                                    contentDescription = stringResource(R.string.qr_cd_event_qr),
                                     modifier = Modifier.size(240.dp)
                                 )
                             } ?: CircularProgressIndicator(color = Color(0xFF1A73E8))
@@ -918,19 +920,23 @@ fun QrScreenView(
                             }
 
                             Text(
-                                "Puerta: ${data.accessRules.entryGate}",
+                                stringResource(R.string.qr_entry_gate, data.accessRules.entryGate),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = Color(0xFF4B5563)
                             )
 
-                            val status = if (data.accessRules.isExpired()) "Expirado" else statusLabel(data.ticket.status)
+                            val status = if (data.accessRules.isExpired()) {
+                                stringResource(R.string.qr_expired)
+                            } else {
+                                statusLabel(data.ticket.status)
+                            }
                             val statusColor = when {
                                 data.accessRules.isExpired() -> Color(0xFFD32F2F)
                                 data.ticket.status == TicketStatus.ACTIVE -> Color(0xFF1F7A4D)
                                 else -> Color(0xFF6B7280)
                             }
                             Text(
-                                "Estado: $status",
+                                stringResource(R.string.qr_status, status),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = statusColor
@@ -938,7 +944,7 @@ fun QrScreenView(
                         }
                     }
 
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
             } else if (hasAnyQr) {
                 // Lista de Eventos guardados
@@ -952,7 +958,7 @@ fun QrScreenView(
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        "Tienes ${existingEventList.size} evento(s) guardado(s)",
+                        stringResource(R.string.qr_events_saved_count, existingEventList.size),
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color(0xFF6B7280),
                         textAlign = TextAlign.Center
@@ -960,7 +966,7 @@ fun QrScreenView(
 
                     existingEventList.reversed().forEachIndexed { index, qr ->
                         val reversedIndex = existingEventList.size - index
-                        SectionCard(title = "Evento #$reversedIndex - ${qr.eventSummary.title}") {
+                        SectionCard(title = stringResource(R.string.qr_event_number_title, reversedIndex, qr.eventSummary.title)) {
                             Column(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -983,7 +989,7 @@ fun QrScreenView(
                                         color = Color(0xFF6B7280)
                                     )
                                     Text(
-                                        "Puerta: ${qr.accessRules.entryGate}",
+                                        stringResource(R.string.qr_entry_gate, qr.accessRules.entryGate),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = Color(0xFF6B7280)
                                     )
@@ -1008,7 +1014,7 @@ fun QrScreenView(
                                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                                             modifier = Modifier.padding(vertical = 4.dp)
                                         ) {
-                                            Text("Ver", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                                            Text(stringResource(R.string.common_view), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
                                         }
                                         Button(
                                             onClick = {
@@ -1042,9 +1048,9 @@ fun QrScreenView(
                                                 val category = EventCategory.values().find { it.name == eventSummary.category } ?: EventCategory.DEPORTIVO
 
                                                 form = EventFormData(
-                                                    organizerName = userSummary?.studentName ?: "Jorge Chaparro",
-                                                    organizerId = userSummary?.studentId ?: "14446",
-                                                    organizerFaculty = userSummary?.faculty ?: "Ingeniería",
+                                                    organizerName = userSummary?.studentName ?: context.getString(R.string.qr_default_organizer_name),
+                                                    organizerId = userSummary?.studentId ?: context.getString(R.string.qr_default_organizer_id),
+                                                    organizerFaculty = userSummary?.faculty ?: context.getString(R.string.qr_default_faculty),
                                                     title = eventSummary.title,
                                                     category = category,
                                                     venue = eventSummary.venue,
@@ -1071,7 +1077,7 @@ fun QrScreenView(
                                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                                             modifier = Modifier.padding(vertical = 4.dp)
                                         ) {
-                                            Text("Editar", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                                            Text(stringResource(R.string.common_edit), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
                                         }
                                         Button(
                                             onClick = { itemToDelete = qr },
@@ -1082,7 +1088,7 @@ fun QrScreenView(
                                             contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp),
                                             modifier = Modifier.padding(vertical = 4.dp)
                                         ) {
-                                            Text("Eliminar", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                                            Text(stringResource(R.string.common_delete), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
                                         }
                                     }
                                 }
@@ -1104,7 +1110,7 @@ fun QrScreenView(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    SectionCard(title = "Tu Evento") {
+                    SectionCard(title = stringResource(R.string.qr_section_your_event)) {
                         Column(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalAlignment = Alignment.CenterHorizontally,
@@ -1117,7 +1123,7 @@ fun QrScreenView(
                             bitmap?.let {
                                 Image(
                                     bitmap = it.asImageBitmap(),
-                                    contentDescription = "QR del Evento",
+                                    contentDescription = stringResource(R.string.qr_cd_event_qr),
                                     modifier = Modifier.size(200.dp)
                                 )
                             } ?: CircularProgressIndicator(color = Color(0xFF1A73E8))
@@ -1153,19 +1159,23 @@ fun QrScreenView(
                             }
 
                             Text(
-                                "Puerta: ${data.accessRules.entryGate}",
+                                stringResource(R.string.qr_entry_gate, data.accessRules.entryGate),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = Color(0xFF4B5563)
                             )
 
-                            val status = if (data.accessRules.isExpired()) "Expirado" else statusLabel(data.ticket.status)
+                            val status = if (data.accessRules.isExpired()) {
+                                stringResource(R.string.qr_expired)
+                            } else {
+                                statusLabel(data.ticket.status)
+                            }
                             val statusColor = when {
                                 data.accessRules.isExpired() -> Color(0xFFD32F2F)
                                 data.ticket.status == TicketStatus.ACTIVE -> Color(0xFF1F7A4D)
                                 else -> Color(0xFF6B7280)
                             }
                             Text(
-                                "Estado: $status",
+                                stringResource(R.string.qr_status, status),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.SemiBold,
                                 color = statusColor
@@ -1174,7 +1184,7 @@ fun QrScreenView(
                     }
 
                     Text(
-                        "Presiona 'Guardar Evento' para guardarlo y volver al perfil.",
+                        stringResource(R.string.qr_save_hint),
                         textAlign = TextAlign.Center,
                         color = Color(0xFF6B7280),
                         style = MaterialTheme.typography.bodySmall,
@@ -1201,7 +1211,7 @@ fun QrScreenView(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
                 ) {
-                    Text("Eliminar todos", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.qr_delete_all), color = Color.White, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -1209,13 +1219,13 @@ fun QrScreenView(
                     onClick = { showExistingQrDialog = false },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF5F5F5), contentColor = Color(0xFF1A73E8))
                 ) {
-                    Text("Cancelar", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.common_cancel), fontWeight = FontWeight.Bold)
                 }
             },
-            title = { Text("Límite de eventos alcanzado (3/3)", fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.qr_limit_dialog_title), fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp), horizontalAlignment = Alignment.Start) {
-                    Text("Selecciona un evento para eliminar y poder crear uno nuevo:")
+                    Text(stringResource(R.string.qr_limit_dialog_message))
                     existingEventList.reversed().forEachIndexed { index, qr ->
                         val reversedIndex = existingEventList.size - index
                         Row(
@@ -1223,7 +1233,7 @@ fun QrScreenView(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Evento #$reversedIndex: ${qr.eventSummary.title}")
+                            Text(stringResource(R.string.qr_event_number, reversedIndex, qr.eventSummary.title))
                             Button(
                                 onClick = {
                                     itemToDelete = qr
@@ -1232,7 +1242,7 @@ fun QrScreenView(
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F)),
                                 modifier = Modifier.padding(4.dp)
                             ) {
-                                Text("Eliminar", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                                Text(stringResource(R.string.common_delete), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
                             }
                         }
                     }
@@ -1263,7 +1273,7 @@ fun QrScreenView(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
                 ) {
-                    Text("Eliminar", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.common_delete), color = Color.White, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -1271,12 +1281,12 @@ fun QrScreenView(
                     onClick = { itemToDelete = null },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF5F5F5), contentColor = Color(0xFF1A73E8))
                 ) {
-                    Text("Cancelar", fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.common_cancel), fontWeight = FontWeight.Bold)
                 }
             },
-            title = { Text("¿Eliminar evento?", fontWeight = FontWeight.Bold) },
+            title = { Text(stringResource(R.string.qr_delete_dialog_title), fontWeight = FontWeight.Bold) },
             text = {
-                Text("¿Estás seguro de que deseas eliminar el evento '${target.eventSummary.title}'? También se eliminará su código QR asociado.")
+                Text(stringResource(R.string.qr_delete_dialog_message, target.eventSummary.title))
             }
         )
     }
@@ -1299,8 +1309,8 @@ fun QrScreenView(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Text("¿Qué deseas hacer?", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
-                    Text("Elige una opción para tu código QR generado.", textAlign = TextAlign.Center)
+                    Text(stringResource(R.string.qr_edit_dialog_title), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.qr_edit_dialog_message), textAlign = TextAlign.Center)
 
                     Column(
                         modifier = Modifier.fillMaxWidth(),
@@ -1315,7 +1325,7 @@ fun QrScreenView(
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
                         ) {
-                            Text("Eliminar QR", color = Color.White, fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.qr_delete_qr), color = Color.White, fontWeight = FontWeight.Bold)
                         }
                         Button(
                             onClick = {
@@ -1329,9 +1339,9 @@ fun QrScreenView(
                                 horizontalArrangement = Arrangement.Center,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(Icons.Filled.Edit, contentDescription = "Editar")
+                                Icon(Icons.Filled.Edit, contentDescription = stringResource(R.string.qr_cd_edit))
                                 Spacer(Modifier.width(8.dp))
-                                Text("Editar QR", color = Color.White, fontWeight = FontWeight.Bold)
+                                Text(stringResource(R.string.qr_edit_qr), color = Color.White, fontWeight = FontWeight.Bold)
                             }
                         }
                         Button(
@@ -1339,13 +1349,20 @@ fun QrScreenView(
                             modifier = Modifier.fillMaxWidth(),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF5F5F5), contentColor = Color(0xFF1A73E8))
                         ) {
-                            Text("Cancelar", fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.common_cancel), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
             }
         }
     }
+}
+
+@Composable
+private fun EventCategory.displayName(): String = when (this) {
+    EventCategory.DEPORTIVO -> stringResource(R.string.qr_category_sports)
+    EventCategory.ACADEMICO -> stringResource(R.string.qr_category_academic)
+    EventCategory.CULTURAL_ARTISTICA -> stringResource(R.string.qr_category_cultural)
 }
 
 @Composable
@@ -1395,7 +1412,7 @@ private fun TicketContent(data: CreateQrResponse) {
     bitmap?.let {
         Image(
             bitmap = it.asImageBitmap(),
-            contentDescription = "QR del Evento",
+            contentDescription = stringResource(R.string.qr_cd_event_qr),
             modifier = Modifier.size(260.dp)
         )
     } ?: CircularProgressIndicator(color = Color(0xFF1A73E8))
@@ -1431,29 +1448,34 @@ private fun TicketContent(data: CreateQrResponse) {
     }
 
     Text(
-        "Puerta: ${data.accessRules.entryGate}",
+        stringResource(R.string.qr_entry_gate, data.accessRules.entryGate),
         style = MaterialTheme.typography.bodyMedium,
         color = Color(0xFF4B5563)
     )
 
-    val status = if (data.accessRules.isExpired()) "Expirado" else statusLabel(data.ticket.status)
+    val status = if (data.accessRules.isExpired()) {
+        stringResource(R.string.qr_expired)
+    } else {
+        statusLabel(data.ticket.status)
+    }
     val statusColor = when {
         data.accessRules.isExpired() -> Color(0xFFD32F2F)
         data.ticket.status == TicketStatus.ACTIVE -> Color(0xFF1F7A4D)
         else -> Color(0xFF6B7280)
     }
     Text(
-        "Estado: $status",
+        stringResource(R.string.qr_status, status),
         style = MaterialTheme.typography.bodyMedium,
         fontWeight = FontWeight.SemiBold,
         color = statusColor
     )
 }
 
+@Composable
 private fun statusLabel(status: TicketStatus): String = when (status) {
-    TicketStatus.ACTIVE -> "Activo"
-    TicketStatus.USED -> "Usado"
-    TicketStatus.CANCELLED -> "Cancelado"
+    TicketStatus.ACTIVE -> stringResource(R.string.qr_status_active)
+    TicketStatus.USED -> stringResource(R.string.qr_status_used)
+    TicketStatus.CANCELLED -> stringResource(R.string.qr_status_cancelled)
 }
 
 /** "2026-09-01T20:00:00Z" -> "01/09/2026". */

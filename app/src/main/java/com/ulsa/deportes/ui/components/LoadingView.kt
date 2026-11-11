@@ -13,9 +13,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.ulsa.deportes.R
 
 /**
  * Vista de carga reutilizable para unificar el indicador de progreso en todas las pantallas.
@@ -23,7 +25,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun LoadingView(
     modifier: Modifier = Modifier,
-    message: String = "Cargando información..."
+    message: String? = null
 ) {
     Box(
         modifier = modifier.fillMaxSize(),
@@ -39,7 +41,7 @@ fun LoadingView(
             )
             Spacer(modifier = Modifier.height(16.dp))
             Text(
-                text = message,
+                text = message ?: stringResource(R.string.common_loading),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Medium,

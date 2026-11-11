@@ -55,12 +55,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.ulsa.deportes.R
 import com.ulsa.deportes.ui.qrSection.qrHome.data.EventPreferences
 import com.ulsa.deportes.ui.qrSection.qrHome.data.RegistrationPreferences
 import com.ulsa.deportes.ui.qrSection.qrHome.model.CreateQrResponse
@@ -128,7 +130,11 @@ fun RegistrationScreenView(
             }
             is QrUiState.Error -> {
                 isRegistering = false
-                android.widget.Toast.makeText(context, currentState.message, android.widget.Toast.LENGTH_LONG).show()
+                android.widget.Toast.makeText(
+                    context,
+                    context.getString(currentState.messageRes, *currentState.formatArgs.toTypedArray()),
+                    android.widget.Toast.LENGTH_LONG
+                ).show()
             }
             else -> {}
         }
@@ -137,10 +143,10 @@ fun RegistrationScreenView(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Registrarse a ${event.title}", fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                title = { Text(stringResource(R.string.registration_title, event.title), fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Regresar")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.registration_back))
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -194,9 +200,9 @@ fun RegistrationScreenView(
                             horizontalArrangement = Arrangement.Center,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Filled.CheckCircle, contentDescription = "Registrar")
+                            Icon(Icons.Filled.CheckCircle, contentDescription = stringResource(R.string.registration_cd_register))
                             Spacer(Modifier.width(8.dp))
-                            Text("Registrarse", fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.registration_button), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -234,12 +240,12 @@ fun RegistrationScreenView(
                         horizontalArrangement = Arrangement.spacedBy(12.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Filled.Event, contentDescription = "Evento", tint = Color.White, modifier = Modifier.size(28.dp))
+                        Icon(Icons.Filled.Event, contentDescription = stringResource(R.string.registration_cd_event), tint = Color.White, modifier = Modifier.size(28.dp))
                         Text(event.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color.White)
                     }
                     Text("${event.getFormattedDate()} · ${event.getFormattedTimeRange()}", style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.9f))
                     Text(event.venue, style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.9f))
-                    Text("Cupos: ${event.capacity}", style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.9f))
+                    Text(stringResource(R.string.registration_spots, event.capacity), style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.9f))
                 }
             }
 
@@ -257,16 +263,16 @@ fun RegistrationScreenView(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Text("Registro de Asistente", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A1A))
-                    Text("Complete sus datos para generar su boleto QR", style = MaterialTheme.typography.bodyMedium, color = Color(0xFF6B7280), textAlign = TextAlign.Center)
+                    Text(stringResource(R.string.registration_form_title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = Color(0xFF1A1A1A))
+                    Text(stringResource(R.string.registration_form_subtitle), style = MaterialTheme.typography.bodyMedium, color = Color(0xFF6B7280), textAlign = TextAlign.Center)
 
                     OutlinedTextField(
                         value = attendeeName,
                         onValueChange = { attendeeName = it },
-                        label = { Text("Nombre completo") },
+                        label = { Text(stringResource(R.string.registration_name)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        leadingIcon = { Icon(Icons.Filled.Person, contentDescription = "Nombre", tint = Color(0xFF1A73E8)) },
+                        leadingIcon = { Icon(Icons.Filled.Person, contentDescription = stringResource(R.string.registration_name), tint = Color(0xFF1A73E8)) },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color(0xFF1A73E8),
                             unfocusedBorderColor = Color(0xFFE6EAF2),
@@ -278,10 +284,10 @@ fun RegistrationScreenView(
                     OutlinedTextField(
                         value = attendeeEmail,
                         onValueChange = { attendeeEmail = it },
-                        label = { Text("Correo electrónico") },
+                        label = { Text(stringResource(R.string.registration_email)) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
-                        leadingIcon = { Icon(Icons.Filled.Email, contentDescription = "Email", tint = Color(0xFF1A73E8)) },
+                        leadingIcon = { Icon(Icons.Filled.Email, contentDescription = stringResource(R.string.registration_email), tint = Color(0xFF1A73E8)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = Color(0xFF1A73E8),
@@ -293,7 +299,7 @@ fun RegistrationScreenView(
 
                     if (!isFormValid && (attendeeName.isNotBlank() || attendeeEmail.isNotBlank())) {
                         Text(
-                            "Complete todos los campos correctamente (email debe contener @)",
+                            stringResource(R.string.registration_validation),
                             style = MaterialTheme.typography.bodySmall,
                             color = Color(0xFFD32F2F),
                             textAlign = TextAlign.Center,
@@ -320,11 +326,11 @@ fun RegistrationScreenView(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Filled.QrCode, contentDescription = "QR", tint = Color(0xFF1A73E8))
+                        Icon(Icons.Filled.QrCode, contentDescription = stringResource(R.string.qr_cd_event_qr), tint = Color(0xFF1A73E8))
                         Spacer(Modifier.width(8.dp))
-                        Text("Su boleto QR se generará al registrarse", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = Color(0xFF1A73E8))
+                        Text(stringResource(R.string.registration_ticket_info_title), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold, color = Color(0xFF1A73E8))
                     }
-                    Text("Recibirá en su email: nombre del evento, lugar, fecha, hora, cupos y el QR como boleto de entrada", style = MaterialTheme.typography.bodySmall, color = Color(0xFF6B7280), textAlign = TextAlign.Center)
+                    Text(stringResource(R.string.registration_ticket_info_desc), style = MaterialTheme.typography.bodySmall, color = Color(0xFF6B7280), textAlign = TextAlign.Center)
                 }
             }
         }
@@ -353,21 +359,21 @@ fun RegistrationScreenView(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Filled.CheckCircle, contentDescription = "Éxito", tint = Color(0xFF1F7A4D))
+                        Icon(Icons.Filled.CheckCircle, contentDescription = stringResource(R.string.registration_cd_success), tint = Color(0xFF1F7A4D))
                         Spacer(Modifier.width(8.dp))
-                        Text("¡Registrado!", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.registration_success_title), fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleMedium)
                     }
                     
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Se ha enviado un email a ${attendeeEmail} con su boleto QR", textAlign = TextAlign.Center)
-                        Text("El email incluye:", style = MaterialTheme.typography.bodySmall, color = Color(0xFF6B7280), textAlign = TextAlign.Center)
+                        Text(stringResource(R.string.registration_success_email, attendeeEmail), textAlign = TextAlign.Center)
+                        Text(stringResource(R.string.registration_email_includes), style = MaterialTheme.typography.bodySmall, color = Color(0xFF6B7280), textAlign = TextAlign.Center)
                         Column(verticalArrangement = Arrangement.spacedBy(4.dp), horizontalAlignment = Alignment.Start) {
-                            Text("• Nombre del evento: ${event.title}")
-                            Text("• Lugar: ${event.venue}")
-                            Text("• Fecha: ${event.getFormattedDate()}")
-                            Text("• Hora: ${event.getFormattedTimeRange()}")
-                            Text("• Cupos: ${event.capacity}")
-                            Text("• QR boleto de entrada (token: ${registration.qrToken.substring(0, 16)}...)")
+                            Text(stringResource(R.string.registration_bullet_event, event.title))
+                            Text(stringResource(R.string.registration_bullet_venue, event.venue))
+                            Text(stringResource(R.string.registration_bullet_date, event.getFormattedDate()))
+                            Text(stringResource(R.string.registration_bullet_time, event.getFormattedTimeRange()))
+                            Text(stringResource(R.string.registration_bullet_spots, event.capacity))
+                            Text(stringResource(R.string.registration_bullet_qr, registration.qrToken.substring(0, 16)))
                         }
                     }
 
@@ -381,14 +387,14 @@ fun RegistrationScreenView(
                             modifier = Modifier.weight(1f, fill = true),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1A73E8))
                         ) {
-                            Text("Volver al Perfil", color = Color.White, fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.registration_back_to_profile), color = Color.White, fontWeight = FontWeight.Bold)
                         }
                         Button(
                             onClick = { showSuccessDialog = false },
                             modifier = Modifier.weight(1f, fill = true),
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF5F5F5), contentColor = Color(0xFF1A73E8))
                         ) {
-                            Text("Ver Boleto", fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.registration_view_ticket), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
