@@ -31,6 +31,38 @@
     <string name="login_error_unexpected_response">Unexpected server response.</string>
     <string name="login_error_server_not_running">Could not connect to the server. Make sure it is running.</string>
     <string name="login_error_no_connection">No connection. Check your network and try again.</string>
+    <string name="login_no_account">Don\'t have an account? </string>
+    <string name="login_register_link">Sign up</string>
+
+    <!-- Register -->
+    <string name="register_logo_desc">ULSA logo</string>
+    <string name="register_title">CREATE ACCOUNT</string>
+    <string name="register_subtitle">Sign up to access the sports community</string>
+    <string name="register_matricula_label">Student ID</string>
+    <string name="register_name_label">Full name</string>
+    <string name="register_email_label">Email</string>
+    <string name="register_password_label">Password</string>
+    <string name="register_show_password">Show password</string>
+    <string name="register_hide_password">Hide password</string>
+    <string name="register_button">SIGN UP</string>
+    <string name="register_loading">Creating your account...</string>
+    <string name="register_have_account">Already have an account? </string>
+    <string name="register_login_link">Log in</string>
+    <string name="register_error_matricula_required">Student ID is required</string>
+    <string name="register_error_name_required">Name is required</string>
+    <string name="register_error_email_required">Email is required</string>
+    <string name="register_error_email_invalid">Email format is invalid</string>
+    <string name="register_error_password_required">Password is required</string>
+    <string name="register_error_password_length">Password must be at least 6 characters</string>
+
+    <!-- Auth errors -->
+    <string name="auth_error_unexpected_response">Unexpected server response.</string>
+    <string name="auth_error_server_not_running">Could not connect to the server. Make sure it is running.</string>
+    <string name="auth_error_no_connection">No connection. Check your network and try again.</string>
+    <string name="auth_error_invalid_credentials">Incorrect email or password</string>
+    <string name="auth_error_disabled_account">This account is disabled</string>
+    <string name="auth_error_email_exists">An account with this email already exists</string>
+    <string name="auth_error_matricula_exists">This student ID is already registered</string>
 
     <!-- Onboarding -->
     <string name="onboarding_title_1">All Your Teams, One Place</string>

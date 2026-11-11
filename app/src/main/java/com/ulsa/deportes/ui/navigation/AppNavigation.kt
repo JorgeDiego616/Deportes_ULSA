@@ -3,7 +3,6 @@ package com.ulsa.deportes.ui.navigation
 import android.app.Application
 import android.net.Uri
 import androidx.annotation.StringRes
-import com.ulsa.deportes.ui.teamsSection.APIRequest.view.ApiRequestView
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -38,25 +37,33 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.ulsa.deportes.R
 import com.ulsa.deportes.common.preferences.AppPreferences
-
-import com.ulsa.deportes.ui.homeSection.homeHome.view.HomeHomeview
-import com.ulsa.deportes.ui.teamsSection.teamsHome.view.teamsHomeView
-import com.ulsa.deportes.ui.matchesSection.matchesHome.view.matchesHomeView
-import com.ulsa.deportes.ui.profileSection.profileHome.view.profileHomeView
-import com.ulsa.deportes.ui.newsSection.newsHome.view.NewsHomeView
+import com.ulsa.deportes.ui.auth.data.SessionPreferences
+import com.ulsa.deportes.ui.auth.domain.AuthRepository
+import com.ulsa.deportes.ui.auth.domain.AuthRepositoryImpl
 import com.ulsa.deportes.ui.auth.view.LoginScreenView
+import com.ulsa.deportes.ui.auth.view.RegisterScreenView
+import com.ulsa.deportes.ui.auth.viewmodel.LoginViewModel
 import com.ulsa.deportes.ui.auth.viewmodel.LogoutViewModel
+import com.ulsa.deportes.ui.auth.viewmodel.RegisterViewModel
+import com.ulsa.deportes.ui.homeSection.homeHome.view.HomeHomeview
+import com.ulsa.deportes.ui.matchesSection.matchesHome.view.matchesHomeView
+import com.ulsa.deportes.ui.newsSection.newsHome.view.NewsHomeView
 import com.ulsa.deportes.ui.onboarding.data.OnboardingPreferences
 import com.ulsa.deportes.ui.onboarding.view.OnboardingScreenView
 import com.ulsa.deportes.ui.onboarding.viewmodel.OnboardingViewModel
+import com.ulsa.deportes.ui.profileSection.profileHome.view.profileHomeView
 import com.ulsa.deportes.ui.qrSection.qrHome.view.QrScreenView
 import com.ulsa.deportes.ui.qrSection.qrHome.view.RegistrationScreenView
 import com.ulsa.deportes.ui.details.view.*
+import com.ulsa.deportes.ui.teamsSection.APIRequest.view.ApiRequestView
+import com.ulsa.deportes.ui.teamsSection.teamsHome.view.teamsHomeView
 
 /** Ruta interna (no es tab) para la pantalla de creación de QR. */
 private const val QR_ROUTE = "qr_screen"
 /** Ruta interna para la pantalla de registro a eventos. */
 private const val REGISTRATION_ROUTE = "registration_screen/{eventId}"
+/** Ruta para la pantalla de registro de usuario. */
+private const val REGISTER_ROUTE = "register"
 
 /**
  * Sealed class defining all bottom-tab routes with their metadata.
@@ -90,15 +97,21 @@ fun AppNavigation() {
     val context = LocalContext.current
     val application = context.applicationContext as Application
     
-    // Logic to decide start destination based on onboarding status
+    // Create AuthRepository once
+    val authRepository: AuthRepository = remember { AuthRepositoryImpl(application) }
+    
+    // Logic to decide start destination based on onboarding status AND session validity
     val startDestination = remember {
         val appPrefs = AppPreferences(context)
         val onboardingPrefs = OnboardingPreferences(appPrefs)
-        if (onboardingPrefs.isOnboardingCompleted()) {
-            val skipLoginForTesting = true
-            if (skipLoginForTesting) "tabs" else AppRoute.Login.route
-        } else {
+        val sessionPrefs = SessionPreferences(context)
+        
+        if (!onboardingPrefs.isOnboardingCompleted()) {
             AppRoute.Onboarding.route
+        } else if (sessionPrefs.isSessionValid()) {
+            "tabs"
+        } else {
+            AppRoute.Login.route
         }
     }
 
@@ -121,11 +134,36 @@ fun AppNavigation() {
         }
 
         composable(AppRoute.Login.route) {
+            val loginViewModel: LoginViewModel = viewModel(
+                factory = LoginViewModel.Factory(application, authRepository)
+            )
             LoginScreenView(
+                viewModel = loginViewModel,
                 onLoginSuccess = {
                     navController.navigate("tabs") {
                         popUpTo(AppRoute.Login.route) { inclusive = true }
                     }
+                },
+                onNavigateToRegister = {
+                    navController.navigate(REGISTER_ROUTE)
+                }
+            )
+        }
+
+        composable(REGISTER_ROUTE) {
+            val registerViewModel: RegisterViewModel = viewModel(
+                factory = RegisterViewModel.Factory(application, authRepository)
+            )
+            RegisterScreenView(
+                viewModel = registerViewModel,
+                onRegisterSuccess = {
+                    navController.navigate("tabs") {
+                        popUpTo(REGISTER_ROUTE) { inclusive = true }
+                        popUpTo(AppRoute.Login.route) { inclusive = true }
+                    }
+                },
+                onBackToLogin = {
+                    navController.popBackStack()
                 }
             )
         }

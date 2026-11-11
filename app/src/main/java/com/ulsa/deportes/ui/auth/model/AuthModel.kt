@@ -69,6 +69,29 @@ data class UserDto(
 )
 
 // ---------------------------------------------------------------------------
+// Específico de la operación "registrarUsuario"
+// ---------------------------------------------------------------------------
+
+/** Lo que pide la mutation `registrarUsuario(matricula, nombre, email, password)`. */
+data class RegisterVariables(
+    val matricula: String,
+    val nombre: String,
+    val email: String,
+    val password: String
+)
+
+/** El campo `data.registrarUsuario` de la respuesta. */
+data class RegisterData(
+    val registrarUsuario: RegisterPayload
+)
+
+/** El `token` (JWT, 8h de vigencia) + los datos del usuario. */
+data class RegisterPayload(
+    val token: String,
+    val usuario: UserDto
+)
+
+// ---------------------------------------------------------------------------
 // Estado observable de la pantalla de login (sin cambios respecto a antes)
 // ---------------------------------------------------------------------------
 
@@ -84,4 +107,24 @@ data class LoginUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val isLoggedIn: Boolean = false
+)
+
+// ---------------------------------------------------------------------------
+// Estado observable de la pantalla de registro
+// ---------------------------------------------------------------------------
+
+/**
+ * Estado observable de la pantalla de registro.
+ *
+ * @property isLoading true mientras se hace la petición.
+ * @property generalError mensaje de error general (no asociado a un campo específico).
+ * @property fieldErrors errores por campo (clave = nombre del campo, valor = mensaje).
+ * @property isRegistered pasa a true cuando el registro fue correcto y ya se guardó la
+ *   sesión; la vista lo observa para navegar a "tabs".
+ */
+data class RegisterUiState(
+    val isLoading: Boolean = false,
+    val generalError: String? = null,
+    val fieldErrors: Map<String, String> = emptyMap(),
+    val isRegistered: Boolean = false
 )

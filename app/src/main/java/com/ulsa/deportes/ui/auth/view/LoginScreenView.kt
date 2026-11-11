@@ -1,8 +1,8 @@
 package com.ulsa.deportes.ui.auth.view
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -39,6 +39,7 @@ private val SportBlueStrong = Color(0xFF0D47A1)
 @Composable
 fun LoginScreenView(
     onLoginSuccess: () -> Unit,
+    onNavigateToRegister: () -> Unit,
     viewModel: LoginViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
@@ -175,8 +176,7 @@ fun LoginScreenView(
 
             // Login Button
             Button(
-                onClick = { viewModel.login(email, password)
-                    Log.d("apiView", "Debugear")},
+                onClick = { viewModel.login(email, password) },
                 enabled = !uiState.isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -212,6 +212,29 @@ fun LoginScreenView(
                     color = SportBlueStrong,
                     fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Register link
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = stringResource(R.string.login_no_account),
+                    color = SportBlueStrong.copy(alpha = 0.8f),
+                    fontWeight = FontWeight.Bold
+                )
+                Text(
+                    text = stringResource(R.string.login_register_link),
+                    color = SportBlueStrong,
+                    fontWeight = FontWeight.Black,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentWidth()
+                        .clickable { onNavigateToRegister() }
                 )
             }
         }
