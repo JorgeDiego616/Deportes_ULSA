@@ -7,7 +7,6 @@ import com.ulsa.deportes.ui.auth.model.GraphQLRequest
 import com.ulsa.deportes.ui.auth.model.LoginData
 import com.ulsa.deportes.ui.auth.model.LoginPayload
 import com.ulsa.deportes.ui.auth.model.RegisterData
-import com.ulsa.deportes.ui.auth.model.RegisterPayload
 import com.ulsa.deportes.ui.auth.model.UserDto
 import com.ulsa.deportes.ui.auth.network.AuthRetrofitClient
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,19 +34,18 @@ class AuthRepositoryImpl(private val application: Application) : AuthRepository 
             "    }\n" +
             "}"
 
-    private val registerMutation = "mutation RegistrarUsuario(\$matricula: String!, \$nombre: String!, \$email: String!, \$password: String!) {\n" +
-            "    registrarUsuario(matricula: \$matricula, nombre: \$nombre, email: \$email, password: \$password) {\n" +
-            "        token\n" +
-            "        usuario {\n" +
-            "            id\n" +
-            "            matricula\n" +
-            "            nombre\n" +
-            "            email\n" +
-            "            rol\n" +
-            "            activo\n" +
-            "        }\n" +
+    private val registerMutation = "mutation RegistrarUsuario(\$matricula: String!, \$nombre: String!, \$email: String!, \$password: String!, \$rol: String!) {\n" +
+            "    registrarUsuario(matricula: \$matricula, nombre: \$nombre, email: \$email, password: \$password, rol: \$rol) {\n" +
+            "        id\n" +
+            "        matricula\n" +
+            "        nombre\n" +
+            "        email\n" +
+            "        rol\n" +
+            "        activo\n" +
             "    }\n" +
             "}"
+
+    private val defaultRole = "ESTUDIANTE"
 
     override suspend fun login(email: String, password: String): Result<AuthRepository.LoginResult> {
         val request = GraphQLRequest(
@@ -90,7 +88,8 @@ class AuthRepositoryImpl(private val application: Application) : AuthRepository 
                 "matricula" to matricula.trim(),
                 "nombre" to nombre.trim(),
                 "email" to email.trim(),
-                "password" to password
+                "password" to password,
+                "rol" to defaultRole
             )
         )
 
@@ -107,13 +106,18 @@ class AuthRepositoryImpl(private val application: Application) : AuthRepository 
                     fieldErrors = fieldErrors
                 ))
             } else {
-                val payload = response.data?.registrarUsuario
-                if (payload == null) {
+                val usuario = response.data?.registrarUsuario
+                if (usuario == null) {
                     Result.failure(AuthRepository.AuthError.UnknownError(application.getString(R.string.auth_error_unexpected_response)))
                 } else {
-                    session.saveSession(payload.token, payload.token, payload.usuario)
-                    _isLoggedIn.value = true
-                    Result.success(AuthRepository.RegisterResult(payload.token, payload.usuario))
+                    login(email, password).fold(
+                        onSuccess = {
+                            Result.success(AuthRepository.RegisterResult(it.token, it.user))
+                        },
+                        onFailure = {
+                            Result.failure(it)
+                        }
+                    )
                 }
             }
         } catch (e: java.net.SocketTimeoutException) {

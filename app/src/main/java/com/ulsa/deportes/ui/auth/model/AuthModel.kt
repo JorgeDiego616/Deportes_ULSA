@@ -80,9 +80,9 @@ data class RegisterVariables(
     val password: String
 )
 
-/** El campo `data.registrarUsuario` de la respuesta. */
+/** El campo `data.registrarUsuario` de la respuesta: el usuario creado (sin token). */
 data class RegisterData(
-    val registrarUsuario: RegisterPayload
+    val registrarUsuario: UserDto
 )
 
 /** El `token` (JWT, 8h de vigencia) + los datos del usuario. */
