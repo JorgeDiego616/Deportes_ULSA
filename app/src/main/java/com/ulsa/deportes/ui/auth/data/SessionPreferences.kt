@@ -56,7 +56,7 @@ class SessionPreferences(context: Context) {
         val parts = token.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
         if (parts.size != 3) throw IllegalArgumentException("JWT inválido")
         val payload = parts[1]
-        val decoded = Base64.decode(payload, Base64.URL_SAFE or Base64.NO_WRAP)
+        val decoded = Base64.decode(payload, Base64.URL_SAFE or Base64.NO_WRAP or Base64.NO_PADDING)
         return JSONObject(String(decoded))
     }
 
