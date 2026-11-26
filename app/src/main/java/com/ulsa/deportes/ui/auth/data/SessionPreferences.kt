@@ -2,52 +2,67 @@ package com.ulsa.deportes.ui.auth.data
 
 import android.content.Context
 import android.util.Base64
-import com.ulsa.deportes.common.preferences.AppPreferences
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKey
 import com.ulsa.deportes.ui.auth.model.UserDto
 import org.json.JSONObject
 
-private const val KEY_ACCESS = "auth_access"
-private const val KEY_REFRESH = "auth_refresh"
+private const val KEY_TOKEN = "auth_token"
 private const val KEY_USERNAME = "auth_username"
+private const val SECURE_PREFS_NAME = "secure_auth_prefs"
 
 /**
- * Expone, con nombres de dominio, la sesión del usuario (tokens JWT + username).
- * La persistencia real vive en [AppPreferences], igual que OnboardingPreferences.
- *
- * Nota: se guarda en `SharedPreferences` plano para mantener el estándar del
- * proyecto. Si se quisiera cifrar, el cambio queda aislado en esta clase.
+ * Gestiona de forma segura la sesión del usuario utilizando almacenamiento cifrado
+ * (EncryptedSharedPreferences con AES-256 GCM).
+ * No permite almacenamiento en texto plano ni utiliza fallback inseguro.
  */
 class SessionPreferences(context: Context) {
 
-    private val appPreferences = AppPreferences(context)
-
-    /** Guarda la sesión tras un login correcto. */
-    fun saveSession(access: String, refresh: String, user: UserDto) {
-        appPreferences.putString(KEY_ACCESS, access)
-        appPreferences.putString(KEY_REFRESH, refresh)
-        appPreferences.putString(KEY_USERNAME, user.email)
+    private val prefs: android.content.SharedPreferences = try {
+        val masterKey = MasterKey.Builder(context, MasterKey.DEFAULT_MASTER_KEY_ALIAS)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+        EncryptedSharedPreferences.create(
+            context,
+            SECURE_PREFS_NAME,
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    } catch (e: Exception) {
+        // Por seguridad, si falla la inicialización del almacenamiento cifrado,
+        // no guardamos credenciales en texto plano. Lanzamos un error controlado.
+        throw IllegalStateException("Fallo crítico en almacenamiento seguro de sesión: ${e.message}", e)
     }
 
-    fun accessToken(): String? = appPreferences.getString(KEY_ACCESS)
-    fun refreshToken(): String? = appPreferences.getString(KEY_REFRESH)
-    fun username(): String? = appPreferences.getString(KEY_USERNAME)
+    /** Guarda la sesión (token JWT y correo de usuario) cifrada. */
+    fun saveSession(token: String, user: UserDto) {
+        prefs.edit().putString(KEY_TOKEN, token).putString(KEY_USERNAME, user.email).apply()
+    }
 
-    /** Hay sesión si tenemos un refresh token guardado. */
-    fun isLoggedIn(): Boolean = !refreshToken().isNullOrBlank()
+    fun accessToken(): String? {
+        return prefs.getString(KEY_TOKEN, null)
+    }
+
+    fun username(): String? {
+        return prefs.getString(KEY_USERNAME, null)
+    }
+
+    /** Hay sesión activa si existe token válido y no ha expirado. */
+    fun isLoggedIn(): Boolean = isSessionValid()
 
     /**
-     * Verifica si la sesión es válida (existe token y no ha expirado).
-     * Decodifica el JWT y revisa el claim `exp` comparándolo con la hora actual.
-     * No verifica la firma del token (eso requiere el backend).
+     * Valida si la sesión es vigente verificando el claim `exp` del JWT.
+     * No valida la firma criptográfica en el cliente.
      */
     fun isSessionValid(): Boolean {
-        val token = refreshToken() ?: return false
+        val token = accessToken() ?: return false
         return try {
             val payload = decodeJwtPayload(token)
             val exp = payload.getLong("exp")
             val now = System.currentTimeMillis() / 1000
             exp > now
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             false
         }
     }
@@ -62,6 +77,6 @@ class SessionPreferences(context: Context) {
 
     /** Borra la sesión del dispositivo (logout). */
     fun clearSession() {
-        appPreferences.remove(KEY_ACCESS, KEY_REFRESH, KEY_USERNAME)
+        prefs.edit().clear().apply()
     }
 }
