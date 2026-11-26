@@ -149,7 +149,7 @@ fun OnboardingScreenView(
                         ),
                         border = androidx.compose.foundation.BorderStroke(2.dp, SportBlueStrong)
                     ) {
-                        Text(text = stringResource(R.string.onboarding_back), fontWeight = FontWeight.ExtraBold)
+                        Text(text = stringResource(R.string.common_back), fontWeight = FontWeight.ExtraBold)
                     }
                 }
 
@@ -224,11 +224,11 @@ fun OnboardingPageItem(
         
         Text(
             text = stringResource(page.title).uppercase(),
-            fontSize = 30.sp,
+            fontSize = 26.sp,
             fontWeight = FontWeight.Black,
             textAlign = TextAlign.Center,
             color = SportBlueStrong,
-            lineHeight = 36.sp,
+            lineHeight = 32.sp,
             modifier = Modifier.padding(horizontal = 16.dp)
         )
         
@@ -236,7 +236,7 @@ fun OnboardingPageItem(
         
         Text(
             text = stringResource(page.description),
-            fontSize = 17.sp,
+            fontSize = 16.sp,
             textAlign = TextAlign.Center,
             color = SportBlueStrong.copy(alpha = 0.9f),
             modifier = Modifier.padding(horizontal = 32.dp),

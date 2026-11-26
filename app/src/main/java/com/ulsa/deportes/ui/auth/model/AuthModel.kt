@@ -55,6 +55,14 @@ data class LoginPayload(
     val usuario: UserDto
 )
 
+// ---------------------------------------------------------------------------
+// Específico de la operación "logout"
+// ---------------------------------------------------------------------------
+
+data class LogoutData(
+    val logout: Boolean
+)
+
 /**
  * Datos del usuario devueltos por el backend. El `id` de Mongo es un string
  * (ej. "6aa618ad55df53d56a0b022f"), no un entero como en el backend anterior.

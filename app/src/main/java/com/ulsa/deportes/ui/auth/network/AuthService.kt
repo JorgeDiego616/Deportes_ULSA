@@ -1,65 +1,77 @@
 package com.ulsa.deportes.ui.auth.network
 
+import android.util.Log
+import com.ulsa.deportes.ApiConfig
 import com.ulsa.deportes.ui.auth.model.GraphQLRequest
 import com.ulsa.deportes.ui.auth.model.GraphQLResponse
 import com.ulsa.deportes.ui.auth.model.LoginData
+import com.ulsa.deportes.ui.auth.model.LogoutData
 import com.ulsa.deportes.ui.auth.model.RegisterData
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.Body
+import retrofit2.http.Headers
 import retrofit2.http.POST
 import java.util.concurrent.TimeUnit
 
-/**
- * Endpoint único de la API de autenticación (GraphQL vía el Gateway de Apollo
- * Federation, servicio "seguridad").
- *
- * A diferencia de una API REST, GraphQL no tiene un endpoint por acción — hay
- * UNA sola URL, y lo que cambia entre "login", "registrarUsuario", etc. es el
- * contenido del [GraphQLRequest] que se manda (el campo `query`).
- *
- * Base URL: http://10.0.2.2:4000/  (el gateway, visto desde el EMULADOR de
- * Android Studio — 10.0.2.2 apunta a "localhost" de la máquina host).
- *
- * Todas las funciones son `suspend` para llamarse desde corrutinas (mismo estilo
- * que GistService).
- */
 interface AuthService {
-    /**
-     * Envía cualquier query/mutation de GraphQL al gateway.
-     *
-     * @return [GraphQLResponse] con `data` (si salió bien) o `errors` (si no).
-     *   A diferencia de REST, GraphQL casi siempre responde HTTP 200 incluso
-     *   cuando la operación falla — el error viene DENTRO del body, en `errors`,
-     *   no como una excepción HTTP. Por eso [GraphQLResponse.errors] se revisa
-     *   a mano en el ViewModel, en vez de esperar un `HttpException`.
-     */
+    @Headers("Content-Type: application/json", "Accept: application/json", "X-Public-Operation: true")
     @POST(".")
     suspend fun graphql(@Body body: GraphQLRequest): GraphQLResponse<LoginData>
 
+    @Headers("Content-Type: application/json", "Accept: application/json", "X-Public-Operation: true")
     @POST(".")
     suspend fun graphqlRegister(@Body body: GraphQLRequest): GraphQLResponse<RegisterData>
+
+    @Headers("Content-Type: application/json", "Accept: application/json")
+    @POST(".")
+    suspend fun logout(@Body body: GraphQLRequest): GraphQLResponse<LogoutData>
 }
 
-/**
- * Cliente Retrofit para [AuthService]. Timeouts moderados (30 s): a diferencia
- * del backend anterior en Render (con cold start de 30-50s), este backend corre
- * localmente vía Docker/Node, así que responde casi de inmediato una vez que
- * los servicios están arriba.
- */
-object AuthRetrofitClient {
+private class AuthLoggingInterceptor : Interceptor {
+    override fun intercept(chain: Interceptor.Chain): Response {
+        val request = chain.request()
+        // Nunca registrar tokens, contraseñas ni cuerpos de autenticación en Logcat
+        Log.d("AuthNetwork", "--> Sending ${request.method} to ${request.url}")
+        val response = chain.proceed(request)
+        Log.d("AuthNetwork", "<-- Received response ${response.code} for ${request.url}")
+        return response
+    }
+}
 
-    private const val BASE_URL = "http://10.0.2.2:4000/"
+object AuthRetrofitClient {
+    var tokenProvider: (() -> String?)? = null
 
     private val okHttpClient = OkHttpClient.Builder()
         .connectTimeout(30, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
         .writeTimeout(30, TimeUnit.SECONDS)
+        .addInterceptor { chain ->
+            val originalRequest = chain.request()
+            // Detectar operaciones públicas explícitamente mediante encabezado interno X-Public-Operation
+            val isPublicOperation = originalRequest.header("X-Public-Operation") != null
+
+            // Retiramos el encabezado interno antes de enviar la petición al servidor
+            val requestBuilder = originalRequest.newBuilder()
+                .removeHeader("X-Public-Operation")
+
+            if (!isPublicOperation) {
+                val token = tokenProvider?.invoke()
+                if (!token.isNullOrBlank()) {
+                    requestBuilder.addHeader("Authorization", "Bearer $token")
+                }
+            }
+
+            chain.proceed(requestBuilder.build())
+        }
+        .addInterceptor(AuthLoggingInterceptor())
         .build()
 
     val authService: AuthService = Retrofit.Builder()
-        .baseUrl(BASE_URL)
+        .baseUrl(ApiConfig.gatewayUrl)
         .client(okHttpClient)
         .addConverterFactory(GsonConverterFactory.create())
         .build()

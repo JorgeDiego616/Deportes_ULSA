@@ -81,8 +81,8 @@ sealed class AppRoute(val route: String, @StringRes val labelRes: Int, val icon:
 
 /** Ordered list of all tabs shown in the bottom bar. */
 private val TABS = listOf(
-    AppRoute.TeamsSection,
     AppRoute.HomeHome,
+    AppRoute.TeamsSection,
     AppRoute.NewsSection,
     AppRoute.MatchesSection,
     AppRoute.ProfileSection,

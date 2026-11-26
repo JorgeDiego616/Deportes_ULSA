@@ -4,14 +4,14 @@ import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.ulsa.deportes.R
+import com.ulsa.deportes.data.repository.SportsRepositoryImpl
+import com.ulsa.deportes.domain.repository.SportsRepository
 import com.ulsa.deportes.ui.homeSection.homeHome.model.HomeData
 import com.ulsa.deportes.ui.homeSection.homeHome.network.HomeRetrofitClient
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import retrofit2.HttpException
-import java.io.IOException
 
 sealed class HomeUiState {
     object Loading : HomeUiState()
@@ -19,7 +19,9 @@ sealed class HomeUiState {
     data class Error(@StringRes val messageRes: Int) : HomeUiState()
 }
 
-class HomeViewModel : ViewModel() {
+class HomeViewModel(
+    private val repository: SportsRepository = SportsRepositoryImpl(HomeRetrofitClient.service)
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -28,18 +30,28 @@ class HomeViewModel : ViewModel() {
         loadHome()
     }
 
+    /**
+     * Consulta el servidor para obtener los datos reales o de respaldo (fallback) a través del repositorio centralizado.
+     */
     fun loadHome() {
         viewModelScope.launch {
             _uiState.value = HomeUiState.Loading
             _uiState.value = try {
-                val data = HomeRetrofitClient.service.getHomeData()
+                val data = repository.getHomeData()
                 HomeUiState.Success(data)
-            } catch (e: IOException) {
-                // Sin internet, DNS, timeout, etc. (Render puede tardar en
-                // "despertar" si el servicio estaba dormido por inactividad).
+            } catch (e: retrofit2.HttpException) {
+                if (e.code() == 401 || e.code() == 403) {
+                    HomeUiState.Error(R.string.error_server)
+                } else {
+                    HomeUiState.Error(R.string.error_server)
+                }
+            } catch (e: java.io.IOException) {
                 HomeUiState.Error(R.string.error_no_connection)
-            } catch (e: HttpException) {
-                HomeUiState.Error(R.string.error_server)
+            } catch (e: Exception) {
+                if (e is NullPointerException || e is ClassCastException || e is IllegalArgumentException || e is IndexOutOfBoundsException) {
+                    throw e
+                }
+                HomeUiState.Error(R.string.common_error)
             }
         }
     }

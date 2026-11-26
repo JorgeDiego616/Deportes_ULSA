@@ -1,9 +1,6 @@
 package com.ulsa.deportes.ui.onboarding.viewmodel
 
 import android.app.Application
-import androidx.annotation.DrawableRes
-import androidx.annotation.StringRes
-import androidx.compose.ui.res.stringArrayResource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.ulsa.deportes.R

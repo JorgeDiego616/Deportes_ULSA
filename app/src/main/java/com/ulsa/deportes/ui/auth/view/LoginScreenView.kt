@@ -1,12 +1,21 @@
 package com.ulsa.deportes.ui.auth.view
 
+import android.content.Context
+import android.content.ContextWrapper
+import android.util.Log
+import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -17,24 +26,30 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.ulsa.deportes.R
 import com.ulsa.deportes.ui.auth.viewmodel.LoginViewModel
 
-// Consistent Sporty Color Palette
 private val SportWhite = Color(0xFFFFFFFF)
 private val SportBlueStrong = Color(0xFF0D47A1)
 
 /**
- * Pantalla de inicio de sesión rediseñada con fondo blanco y estética deportiva ULSA.
+ * Pantalla de inicio de sesión integrada con soporte biométrico, teclado específico,
+ * ocultación de teclado al tocar fuera, desplazamiento con IME padding y navegación a registro.
  */
 @Composable
 fun LoginScreenView(
@@ -47,6 +62,9 @@ fun LoginScreenView(
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
 
+    val focusManager = LocalFocusManager.current
+    val context = LocalContext.current
+
     LaunchedEffect(uiState.isLoggedIn) {
         if (uiState.isLoggedIn) onLoginSuccess()
     }
@@ -55,12 +73,20 @@ fun LoginScreenView(
         modifier = Modifier
             .fillMaxSize()
             .background(SportWhite)
+            .clickable(
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            ) {
+                focusManager.clearFocus()
+            }
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp)
-                .systemBarsPadding(),
+                .verticalScroll(rememberScrollState())
+                .imePadding()
+                .systemBarsPadding()
+                .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -69,16 +95,16 @@ fun LoginScreenView(
                 painter = painterResource(id = R.drawable.logo_ulsa),
                 contentDescription = stringResource(R.string.login_logo_desc),
                 modifier = Modifier
-                    .size(120.dp)
+                    .size(110.dp)
                     .clip(RoundedCornerShape(16.dp)),
                 contentScale = ContentScale.Fit
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
             Text(
                 text = stringResource(R.string.login_welcome),
-                fontSize = 32.sp,
+                fontSize = 30.sp,
                 fontWeight = FontWeight.Black,
                 color = SportBlueStrong,
                 textAlign = TextAlign.Center
@@ -86,13 +112,13 @@ fun LoginScreenView(
 
             Text(
                 text = stringResource(R.string.login_subtitle),
-                fontSize = 16.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
                 color = SportBlueStrong.copy(alpha = 0.8f),
                 textAlign = TextAlign.Center
             )
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(30.dp))
 
             // Email Field
             OutlinedTextField(
@@ -104,6 +130,11 @@ fun LoginScreenView(
                 label = { Text(stringResource(R.string.email_label), fontWeight = FontWeight.SemiBold) },
                 singleLine = true,
                 enabled = !uiState.isLoading,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Email,
+                    capitalization = KeyboardCapitalization.None,
+                    autoCorrectEnabled = false
+                ),
                 modifier = Modifier.fillMaxWidth(),
                 leadingIcon = {
                     Icon(Icons.Default.Email, contentDescription = null, tint = SportBlueStrong)
@@ -129,6 +160,11 @@ fun LoginScreenView(
                 label = { Text(stringResource(R.string.password_label), fontWeight = FontWeight.SemiBold) },
                 singleLine = true,
                 enabled = !uiState.isLoading,
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Password,
+                    capitalization = KeyboardCapitalization.None,
+                    autoCorrectEnabled = false
+                ),
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
                 leadingIcon = {
                     Icon(Icons.Default.Lock, contentDescription = null, tint = SportBlueStrong)
@@ -172,21 +208,24 @@ fun LoginScreenView(
                 )
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Login Button
             Button(
-                onClick = { viewModel.login(email, password) },
+                onClick = {
+                    focusManager.clearFocus()
+                    viewModel.login(email, password)
+                },
                 enabled = !uiState.isLoading,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(56.dp),
+                    .height(54.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = ButtonDefaults.buttonColors(
                     containerColor = SportBlueStrong,
                     contentColor = SportWhite
                 ),
-                elevation = ButtonDefaults.buttonElevation(defaultElevation = 8.dp)
+                elevation = ButtonDefaults.buttonElevation(defaultElevation = 6.dp)
             ) {
                 if (uiState.isLoading) {
                     CircularProgressIndicator(
@@ -197,11 +236,40 @@ fun LoginScreenView(
                 } else {
                     Text(
                         text = stringResource(R.string.login_enter),
-                        fontSize = 18.sp,
+                        fontSize = 17.sp,
                         fontWeight = FontWeight.Black
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Biometric Login Button
+            OutlinedButton(
+                onClick = {
+                    focusManager.clearFocus()
+                    launchBiometricPrompt(context, onLoginSuccess)
+                },
+                enabled = !uiState.isLoading,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(54.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = SportBlueStrong
+                ),
+                border = androidx.compose.foundation.BorderStroke(2.dp, SportBlueStrong)
+            ) {
+                Icon(Icons.Default.Fingerprint, contentDescription = "Biométrico", modifier = Modifier.size(24.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "ACCEDER CON BIOMETRÍA",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
 
             // Loading message
             if (uiState.isLoading) {
@@ -215,7 +283,7 @@ fun LoginScreenView(
                 )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Register link
             Row(
@@ -232,11 +300,48 @@ fun LoginScreenView(
                     color = SportBlueStrong,
                     fontWeight = FontWeight.Black,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentWidth()
                         .clickable { onNavigateToRegister() }
                 )
             }
         }
     }
+}
+
+private fun launchBiometricPrompt(context: Context, onSuccess: () -> Unit) {
+    val activity = context.findFragmentActivity()
+    if (activity != null) {
+        val executor = ContextCompat.getMainExecutor(activity)
+        val biometricPrompt = BiometricPrompt(activity, executor,
+            object : BiometricPrompt.AuthenticationCallback() {
+                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                    super.onAuthenticationSucceeded(result)
+                    onSuccess()
+                }
+                override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
+                    super.onAuthenticationError(errorCode, errString)
+                }
+                override fun onAuthenticationFailed() {
+                    super.onAuthenticationFailed()
+                }
+            })
+
+        val promptInfo = BiometricPrompt.PromptInfo.Builder()
+            .setTitle("Autenticación Biométrica ULSA")
+            .setSubtitle("Usa tu huella digital o reconocimiento facial para iniciar sesión")
+            .setNegativeButtonText("Cancelar")
+            .build()
+
+        biometricPrompt.authenticate(promptInfo)
+    } else {
+        Log.w("Biometric", "Context is not a FragmentActivity")
+    }
+}
+
+private fun Context.findFragmentActivity(): FragmentActivity? {
+    var context = this
+    while (context is ContextWrapper) {
+        if (context is FragmentActivity) return context
+        context = context.baseContext
+    }
+    return null
 }

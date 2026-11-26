@@ -4,9 +4,6 @@ import android.app.Application
 import com.ulsa.deportes.R
 import com.ulsa.deportes.ui.auth.data.SessionPreferences
 import com.ulsa.deportes.ui.auth.model.GraphQLRequest
-import com.ulsa.deportes.ui.auth.model.LoginData
-import com.ulsa.deportes.ui.auth.model.LoginPayload
-import com.ulsa.deportes.ui.auth.model.RegisterData
 import com.ulsa.deportes.ui.auth.model.UserDto
 import com.ulsa.deportes.ui.auth.network.AuthRetrofitClient
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,6 +13,10 @@ class AuthRepositoryImpl(private val application: Application) : AuthRepository 
 
     private val session = SessionPreferences(application)
     private val authService = AuthRetrofitClient.authService
+
+    init {
+        AuthRetrofitClient.tokenProvider = { session.accessToken() }
+    }
 
     private val _isLoggedIn = MutableStateFlow(session.isLoggedIn())
     override val isLoggedIn = _isLoggedIn.asStateFlow()
@@ -45,6 +46,10 @@ class AuthRepositoryImpl(private val application: Application) : AuthRepository 
             "    }\n" +
             "}"
 
+    private val logoutMutation = "mutation Logout {\n" +
+            "    logout\n" +
+            "}"
+
     private val defaultRole = "ESTUDIANTE"
 
     override suspend fun login(email: String, password: String): Result<AuthRepository.LoginResult> {
@@ -64,7 +69,7 @@ class AuthRepositoryImpl(private val application: Application) : AuthRepository 
                 if (payload == null) {
                     Result.failure(AuthRepository.AuthError.UnknownError(application.getString(R.string.auth_error_unexpected_response)))
                 } else {
-                    session.saveSession(payload.token, payload.token, payload.usuario)
+                    session.saveSession(payload.token, payload.usuario)
                     _isLoggedIn.value = true
                     Result.success(AuthRepository.LoginResult(payload.token, payload.usuario))
                 }
@@ -110,6 +115,7 @@ class AuthRepositoryImpl(private val application: Application) : AuthRepository 
                 if (usuario == null) {
                     Result.failure(AuthRepository.AuthError.UnknownError(application.getString(R.string.auth_error_unexpected_response)))
                 } else {
+                    // Tras registro exitoso, ejecutamos login automático como pide el flujo del usuario
                     login(email, password).fold(
                         onSuccess = {
                             Result.success(AuthRepository.RegisterResult(it.token, it.user))
@@ -183,10 +189,20 @@ class AuthRepositoryImpl(private val application: Application) : AuthRepository 
 
     override fun getAccessToken(): String? = session.accessToken()
 
-    override fun getRefreshToken(): String? = session.refreshToken()
+    override fun getRefreshToken(): String? = null // Sin refresh token en el backend actual
 
     override suspend fun logout() {
-        session.clearSession()
-        _isLoggedIn.value = false
+        try {
+            val request = GraphQLRequest(
+                query = logoutMutation,
+                variables = emptyMap()
+            )
+            authService.logout(request)
+        } catch (_: Exception) {
+            // Best-effort remote logout; limpiamos la sesión local siempre
+        } finally {
+            session.clearSession()
+            _isLoggedIn.value = false
+        }
     }
 }
